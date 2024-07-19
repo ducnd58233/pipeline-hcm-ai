@@ -122,13 +122,13 @@ dmypy.json
 
 # Environments
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-HungAn_env/
+# .venv
+# env/
+# venv/
+# ENV/
+# env.bak/
+# venv.bak/
+# HungAn_env/
 
 # apex
 apex/
