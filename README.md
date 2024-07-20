@@ -5,6 +5,7 @@ Create Conda:
 ```
 conda create -n hcm-ai python=3.11 -y
 conda activate hcm-ai
+conda install ffmpeg
 ```
 Create venv
 ```sh
@@ -26,7 +27,7 @@ source venv/bin/activate
 ## Installation
 ```
 pip install git+https://github.com/openai/CLIP.git
-pip install -r requirements.txt
+pip install --default-timeout=1000 -r requirements.txt
 ```
 
 ## Run 
