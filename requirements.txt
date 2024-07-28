@@ -16,6 +16,8 @@ langdetect==1.0.9
 rapidfuzz==2.12.0
 sentence_transformers==2.2.2
 tensorflow==2.12.0
+easyocr==1.7.1
 ipykernel
 ffmpeg-python
+git+https://github.com/openai/whisper.git
 

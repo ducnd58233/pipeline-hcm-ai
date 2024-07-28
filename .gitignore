@@ -1,3 +1,7 @@
+**/*_output.ipynb
+TransNetV2
+Audio/
+*.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
