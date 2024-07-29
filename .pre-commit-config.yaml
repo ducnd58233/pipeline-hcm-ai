@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: nb-clean
         args:
+          - -o
           - --remove-empty-cells
           - --preserve-cell-metadata
           - preserve
