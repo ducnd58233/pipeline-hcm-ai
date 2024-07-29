@@ -4,10 +4,8 @@ repos:
     hooks:
       - id: nb-clean
         args:
-          - --preserve-notebook-metadata
           - --remove-empty-cells
           - --preserve-cell-metadata
           - preserve
           - tags
-          - slideshow
           - --
