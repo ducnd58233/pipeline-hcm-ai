@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/srstevenson/nb-clean
+    rev: 3.3.0
+    hooks:
+      - id: nb-clean
+        args:
+          - --preserve-notebook-metadata
+          - --remove-empty-cells
+          - --preserve-cell-metadata
+          - preserve
+          - tags
+          - slideshow
+          - --
