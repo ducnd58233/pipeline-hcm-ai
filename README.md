@@ -10,6 +10,7 @@ conda install ffmpeg
 Create venv
 ```sh
 python -m venv venv
+pre-commit install
 ```
 
 Windows venv activation
