@@ -5,6 +5,7 @@ repos:
       - id: nb-clean
         args:
           - -o
+          - -n
           - --remove-empty-cells
           - --preserve-cell-metadata
           - preserve
