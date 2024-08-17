@@ -3,11 +3,11 @@
 ## Setup 
 Create Conda:
 ```
-conda create -n hcm-ai python=3.11 -y
+conda create -n hcm-ai python=3.9.19 -y
 conda activate hcm-ai
 conda install ffmpeg
 ```
-Create venv
+Create venv (no need)
 ```sh
 python -m venv venv
 pre-commit install
