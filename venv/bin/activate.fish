@@ -29,7 +29,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/jiggle/personal/competition/hcm-ai/Pipeline_HCM_AI/venv"
+set -gx VIRTUAL_ENV "/home/heigatvu/my-project/competition/HCMC-AI/pipeline-hcm-ai/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

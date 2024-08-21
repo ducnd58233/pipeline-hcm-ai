@@ -1,4 +1,4 @@
-#!/home/jiggle/personal/competition/hcm-ai/Pipeline_HCM_AI/venv/bin/python
+#!/home/heigatvu/my-project/competition/HCMC-AI/pipeline-hcm-ai/venv/bin/python
 # -*- coding: utf-8 -*-
 import argparse
 import sys
