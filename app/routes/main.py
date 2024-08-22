@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, send_from_directory
 from app.services.faiss_service import FAISSService
 from app.models.models import FrameMetadata
-import os
 import csv
 import json
 
@@ -33,7 +32,7 @@ def search():
         metadata_query = request.args.get('metadata_query')
 
     page = request.args.get('page', 1, type=int)
-    per_page = 15
+    per_page = 20
 
     if metadata_query:
         try:
@@ -48,7 +47,12 @@ def search():
     total_pages = (total_results + per_page - 1) // per_page
     paginated_results = paginate(results, page, per_page)
 
-    return render_template('search_results.html', results=paginated_results, query=query, page=page, total_pages=total_pages)
+    return render_template('search_results.html',
+                           results=paginated_results,
+                           query=query,
+                           page=page,
+                           total_pages=total_pages,
+                           selected_frames=selected_frames)
 
 
 @main.route('/frame/<frame_id>')
@@ -62,39 +66,64 @@ def get_selected_frames():
     page = request.args.get('page', 1, type=int)
     per_page = 20
 
-    frames = [FrameMetadata.get(frame_id) for frame_id in selected_frames]
+    frames = []
+    for frame_id, score in selected_frames:
+        frame = FrameMetadata.get(frame_id)
+        print(frame)
+        frame.update({
+            'frame_id': frame_id,
+            'score': score,
+        })
+        frames.append(frame)
+
     total_frames = len(frames)
     total_pages = (total_frames + per_page - 1) // per_page
     paginated_frames = paginate(frames, page, per_page)
 
-    return render_template('selected_frames.html', frames=paginated_frames, page=page, total_pages=total_pages)
+    return render_template('selected_frames.html',
+                           frames=paginated_frames,
+                           page=page,
+                           total_pages=total_pages)
 
 
 @main.route('/toggle-frame', methods=['POST'])
 def toggle_frame():
     frame_id = request.form.get('frame_id')
+    score = request.form.get('score')
+
     if frame_id in selected_frames:
-        selected_frames.remove(frame_id)
+        selected_frames.remove((frame_id, score))
     else:
-        selected_frames.add(frame_id)
+        selected_frames.add((frame_id, score))
+
     return get_selected_frames()
 
 
-@main.route('/submit-frames', methods=['POST'])
-def submit_frames():
-    frame_ids = request.form.getlist('frame_ids')
-    with open(current_app.config['RESULTS_CSV_PATH'], 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        for frame_id in frame_ids:
-            metadata = FrameMetadata.get(frame_id)
+@main.route('/submit-frame', methods=['POST'])
+def submit_frame():
+    frame_id = request.form.get('frame_id')
+
+    metadata = FrameMetadata.get(frame_id)
+    if metadata is None:
+        return "Error: Frame not found", 404
+
+    try:
+        with open(current_app.config['RESULTS_CSV_PATH'], 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
             writer.writerow(
                 [frame_id, metadata['video_path'], metadata['timestamp']])
-    return "Results saved successfully"
+    except Exception as e:
+        current_app.logger.error(f"Error writing to CSV: {str(e)}")
+        return "Error submitting frame", 500
+
+    return "Frame submitted successfully"
 
 
 @main.route('/video-preview/<frame_id>')
 def video_preview(frame_id):
     metadata = FrameMetadata.get(frame_id)
+    if metadata is None:
+        return "Error: Frame not found", 404
     video_path = metadata['video_path']
     timestamp = metadata['timestamp']
     return render_template('video_preview.html', video_path=video_path, timestamp=timestamp)

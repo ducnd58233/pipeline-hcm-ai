@@ -25,6 +25,7 @@ def preprocess_query(query, expected_dim=768):
 
     # Rejoin tokens
     processed_query = ' '.join(filtered_tokens)
+    print(processed_query)
 
     # Encode with CLIP
     query_vector = encode_text(clip_model, processed_query)

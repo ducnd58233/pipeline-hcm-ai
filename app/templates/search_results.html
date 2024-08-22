@@ -12,7 +12,8 @@
 
 <div class="frame-grid">
     {% for result in results %}
-    <div class="frame-card" id="result-{{ result.frame_id }}">
+    <div class="frame-card {% if result.frame_id in selected_frames %}selected{% endif %}"
+        id="result-{{ result.frame_id }}">
         <div class="frame">
             <img src="{{ url_for('main.serve_keyframe', filename=result.metadata.frame_path) }}"
                 alt="{{ result.frame_id }}">
@@ -23,9 +24,9 @@
         <div class="frame-info">
             <p>Frame ID: {{ result.frame_id }}</p>
             <p>Score: {{ result.score }}</p>
-            <button hx-post="{{ url_for('main.toggle_frame') }}" hx-vals='{"frame_id": "{{ result.frame_id }}"}'
-                hx-target="#selected-frames" hx-trigger="click">
-                Select
+            <button hx-post="{{ url_for('main.toggle_frame') }}" hx-vals='{"frame_id": "{{ result.frame_id }}", "score": "{{ result.score }}"}'
+                hx-target="#selected-frames" hx-trigger="click" hx-swap="outerHTML" class="toggle-select">
+                {% if result.frame_id in selected_frames %}Deselect{% else %}Select{% endif %}
             </button>
             <button hx-get="{{ url_for('main.frame_details', frame_id=result.frame_id) }}" hx-target="#details-popup"
                 hx-trigger="click"
@@ -36,3 +37,13 @@
     </div>
     {% endfor %}
 </div>
+
+<script>
+    document.body.addEventListener('htmx:afterOnLoad', function (event) {
+        if (event.detail.elt.classList.contains('toggle-select')) {
+            var frameCard = event.detail.elt.closest('.frame-card');
+            frameCard.classList.toggle('selected');
+            event.detail.elt.textContent = frameCard.classList.contains('selected') ? 'Deselect' : 'Select';
+        }
+    });
+</script>
