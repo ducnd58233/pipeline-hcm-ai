@@ -3,6 +3,7 @@ AIC_Video
 TransNetV2
 Audio/
 *.pt
+.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

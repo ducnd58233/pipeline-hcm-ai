@@ -33,7 +33,8 @@ pip install --default-timeout=1000 -r requirements.txt
 
 ## Run 
 ```
-python app.py
+cp .env.example .env
+python run.py
 ```
 
 URL: http://0.0.0.0:5001/home?index=0
