@@ -1,0 +1,48 @@
+{% if frames %}
+<div class="pagination">
+    {% for i in range(1, total_pages + 1) %}
+    {% if i == page %}
+    <span>{{ i }}</span>
+    {% else %}
+    <a href="#" hx-get="{{ url_for('main.selected_frames', page=i) }}" hx-target="#selected-frames">{{ i }}</a>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<div class="frame-grid">
+    {% for frame in frames %}
+    <div class="frame-card selected" id="selected-{{ frame.frame_id }}">
+        <div class="frame">
+            <img src="{{ url_for('main.serve_keyframe', filename=frame.frame_path) }}" alt="{{ frame.frame_id }}">
+            <div class="video-preview" hx-get="{{ url_for('main.video_preview', frame_id=frame.frame_id) }}"
+                hx-trigger="mouseenter once" hx-target="this">
+            </div>
+        </div>
+        <div class="frame-info">
+            <p>Frame ID: {{ frame.frame_id }}</p>
+            <p>Score: {{ frame.score }}</p>
+            <button hx-post="{{ url_for('main.toggle_frame') }}" hx-vals='{"frame_id": "{{ frame.frame_id }}"}'
+                hx-target="#selected-frames" hx-trigger="click">
+                Deselect
+            </button>
+            <button hx-get="{{ url_for('main.frame_details', frame_id=frame.frame_id) }}" hx-target="#details-popup"
+                hx-trigger="click"
+                onclick="document.getElementById('overlay').classList.add('active'); document.getElementById('details-popup').classList.add('active');">
+                Details
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<form hx-post="{{ url_for('main.submit_frames') }}" hx-target="#submission-result">
+    {% for frame in frames %}
+    <input type="hidden" name="frame_ids" value="{{ frame.frame_id }}">
+    {% endfor %}
+    <button type="submit">Submit Selected Frames</button>
+</form>
+
+<div id="submission-result"></div>
+{% else %}
+<p>No frames selected.</p>
+{% endif %}
