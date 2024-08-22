@@ -4,7 +4,7 @@
     {% if i == page %}
     <span>{{ i }}</span>
     {% else %}
-    <a href="#" hx-get="{{ url_for('main.selected_frames', page=i) }}" hx-target="#selected-frames">{{ i }}</a>
+    <a href="#" hx-get="{{ url_for('main.get_selected_frames', page=i) }}" hx-target="#selected-frames">{{ i }}</a>
     {% endif %}
     {% endfor %}
 </div>
@@ -21,7 +21,7 @@
         <div class="frame-info">
             <p>Frame ID: {{ frame.frame_id }}</p>
             <p>Score: {{ frame.score }}</p>
-            <button hx-post="{{ url_for('main.toggle_frame') }}" hx-vals='{"frame_id": "{{ frame.frame_id }}"}'
+            <button hx-post="{{ url_for('main.toggle_frame') }}" hx-vals='{"frame_id": "{{ frame.frame_id }}", "score": "{{ frame.score }}"}'
                 hx-target="#selected-frames" hx-trigger="click">
                 Deselect
             </button>
@@ -30,17 +30,14 @@
                 onclick="document.getElementById('overlay').classList.add('active'); document.getElementById('details-popup').classList.add('active');">
                 Details
             </button>
+            <form hx-post="{{ url_for('main.submit_frame') }}" hx-target="#submission-result">
+                <input type="hidden" name="frame_id" value="{{ frame.frame_id }}">
+                <button type="submit">Submit This Frame</button>
+            </form>
         </div>
     </div>
     {% endfor %}
 </div>
-
-<form hx-post="{{ url_for('main.submit_frames') }}" hx-target="#submission-result">
-    {% for frame in frames %}
-    <input type="hidden" name="frame_ids" value="{{ frame.frame_id }}">
-    {% endfor %}
-    <button type="submit">Submit Selected Frames</button>
-</form>
 
 <div id="submission-result"></div>
 {% else %}

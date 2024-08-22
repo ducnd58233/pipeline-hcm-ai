@@ -18,14 +18,12 @@ class FAISSService:
 
     def search(self, query, k=100):
         if isinstance(query, str):
-            # Text query
             query_vector = preprocess_query(query, expected_dim=self.index.d)
         elif isinstance(query, dict):
-            # Metadata query
             query_vector = self._metadata_to_vector(query)
         else:
             raise ValueError("Invalid query type. Expected string or dict.")
-
+        
         # Perform the search
         scores, indices = self.index.search(query_vector, k)
         return self._get_results(scores[0], indices[0])
