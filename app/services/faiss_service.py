@@ -50,7 +50,6 @@ class FAISSService:
 
     def _calculate_similarity(self, query_metadata, frame_metadata):
         # Implement a simple similarity metric based on metadata fields
-        # You can customize this based on your specific metadata structure
         similarity = 0
         if query_metadata.get('video_path') == frame_metadata.get('video_path'):
             similarity += 1

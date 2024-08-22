@@ -69,7 +69,6 @@ def get_selected_frames():
     frames = []
     for frame_id, score in selected_frames:
         frame = FrameMetadata.get(frame_id)
-        print(frame)
         frame.update({
             'frame_id': frame_id,
             'score': score,
