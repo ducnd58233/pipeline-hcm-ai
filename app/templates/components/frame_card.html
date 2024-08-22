@@ -1,0 +1,18 @@
+<div class="frame-card {% if selected %}selected{% endif %}" id="frame-{{ frame.id }}">
+    <img src="{{ frame.frame_path }}" alt="Frame {{ frame.id }}">
+    <p>Frame ID: {{ frame.id }}</p>
+    <p>Score: {{ "%.4f"|format(frame.score) }}</p>
+    {% if in_search_results %}
+    <button hx-post="/select_frame" hx-trigger="click" hx-target="#selected-frames" hx-swap="beforeend"
+        hx-vals='{"frame_id": "{{ frame.id }}"}'
+        onclick="this.closest('.frame-card').classList.add('selected'); document.body.dispatchEvent(new CustomEvent('frameSelected', { detail: { frameId: '{{ frame.id }}' } }));">
+        Select
+    </button>
+    {% else %}
+    <button hx-post="/deselect_frame" hx-trigger="click" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML"
+        hx-vals='{"frame_id": "{{ frame.id }}"}'
+        onclick="document.body.dispatchEvent(new CustomEvent('frameSelected', { detail: { frameId: '{{ frame.id }}' } }));">
+        Deselect
+    </button>
+    {% endif %}
+</div>

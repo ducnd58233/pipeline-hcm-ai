@@ -1,0 +1,13 @@
+<div class="search-results">
+    {% for frame in results %}
+    {% include 'components/frame_card.html' with context %}
+    {% endfor %}
+</div>
+<div class="pagination">
+    {% if results %}
+    <button hx-post="/search" hx-trigger="click" hx-target="#search-results"
+        hx-vals='{"query": "{{ query }}", "page": {{ page + 1 }}}'>
+        Load More
+    </button>
+    {% endif %}
+</div>

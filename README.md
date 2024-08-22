@@ -3,7 +3,7 @@
 ## Setup 
 Create Conda:
 ```
-conda create -n hcm-ai python=3.11 -y
+conda create -n hcm-ai python=3.9 -y
 conda activate hcm-ai
 conda install ffmpeg
 ```

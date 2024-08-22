@@ -1,22 +1,33 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h1>Video Retrieval</h1>
+<h1>Video Retrieval System</h1>
 
-<form hx-get="{{ url_for('main.search') }}" hx-target="#search-results">
-    <input type="text" name="query" placeholder="Search...">
-    <button type="submit">Search</button>
-</form>
+{% include 'components/search_bar.html' %}
 
-<div id="selected-frames-container">
-    <h2>Selected Frames</h2>
-    <div id="selected-frames" hx-get="{{ url_for('main.get_selected_frames') }}" hx-trigger="load"></div>
-</div>
+<h2>Selected Frames</h2>
+<div id="selected-frames" hx-get="/get_selected_frames" hx-trigger="load, frameSelected from:body" hx-target="this"
+    hx-vals='js:{frame_ids: window.selectedFrames}'></div>
 
+<h2>Search Results</h2>
 <div id="search-results"></div>
 
-<div id="details-popup" class="details-popup"></div>
-<div id="overlay" class="overlay"
-    onclick="this.classList.remove('active'); document.getElementById('details-popup').classList.remove('active');">
-</div>
+<button hx-post="/submit" hx-trigger="click" hx-target="#confirm-submit-modal" hx-swap="innerHTML">
+    Submit Selected Frames
+</button>
 
+<div id="confirm-submit-modal"></div>
+
+<script>
+    window.selectedFrames = [];
+    document.body.addEventListener('frameSelected', function (event) {
+        const frameId = event.detail.frameId;
+        const index = window.selectedFrames.indexOf(frameId);
+        if (index > -1) {
+            window.selectedFrames.splice(index, 1);
+        } else {
+            window.selectedFrames.push(frameId);
+        }
+    });
+</script>
 {% endblock %}
