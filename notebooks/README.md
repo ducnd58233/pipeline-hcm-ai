@@ -22,9 +22,10 @@
     |- dataset
         |- AIC_Video
             |- Videos_L01
-                |- L01_V001.mp4
-                |- L01_V002.mp4
-                |- ...
+                |- video
+                    |- L01_V001.mp4
+                    |- L01_V002.mp4
+                    |- ...
             |- Videos_...
     |- metadata
     |- transnet
