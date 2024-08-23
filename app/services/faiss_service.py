@@ -70,10 +70,8 @@ class FAISSService:
                     shot_index=frame_data['shot_index'],
                     frame_index=frame_data['frame_index'],
                     timestamp=frame_data['timestamp'],
-                    video_path=os.path.join(
-                        'videos', frame_data['video_path']),
-                    frame_path=os.path.join(
-                        'keyframes', frame_data['frame_path']),
+                    video_path=os.path.join('videos', frame_data['video_path']),
+                    frame_path=os.path.join('keyframes', frame_data['frame_path']),
                     score=float(score),
                     selected=frame_data.get('selected', False)
                 )

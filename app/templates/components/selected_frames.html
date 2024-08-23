@@ -1,14 +1,7 @@
-<div class="pagination">
-    {% if frames %}
-    <button hx-get="/get_selected_frames" hx-trigger="click" hx-target="#selected-frames"
-        hx-vals='js:{"page": {{ page + 1 }}, "frame_ids": window.selectedFrames}'>
-        Load More
-    </button>
-    {% endif %}
-</div>
-
 <div class="selected-frames">
     {% for frame in frames %}
-    {% include 'components/frame_card.html' with context %}
+    {% with selected_frame=True %}
+    {% include 'components/frame_card.html' %}
+    {% endwith %}
     {% endfor %}
 </div>

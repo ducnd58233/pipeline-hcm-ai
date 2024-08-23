@@ -1,12 +1,7 @@
 <div class="modal">
-    <div class="modal-content">
-        <h2>Confirm Submission</h2>
-        <p>Are you sure you want to submit the selected frames?</p>
-        <button hx-post="/submit" hx-trigger="click" hx-target="#submit-result"
-            hx-vals='js:{"selected_frames": window.selectedFrames}'
-            onclick="document.querySelector('.modal').style.display='none';">
-            Confirm
-        </button>
-        <button onclick="document.querySelector('.modal').style.display='none';">Cancel</button>
-    </div>
+    <p>Are you sure you want to submit this frame?</p>
+    <button hx-post="/confirm_submit" hx-target="body" hx-swap="innerHTML">
+        Yes, Submit
+    </button>
+    <button onclick="this.closest('.modal').remove()">Cancel</button>
 </div>
