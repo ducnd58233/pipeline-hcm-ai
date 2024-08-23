@@ -1,10 +1,24 @@
 import logging.config
+from datetime import datetime
+import pytz
+
+
+class TimezoneFormatter(logging.Formatter):
+    def formatTime(self, record, datefmt=None):
+        # Đặt múi giờ mặc định là Hồ Chí Minh
+        timezone = pytz.timezone('Asia/Ho_Chi_Minh')
+        conversion = datetime.fromtimestamp(record.created, timezone)
+        if datefmt:
+            return conversion.strftime(datefmt)
+        return conversion.strftime("%Y-%m-%d %H:%M:%S %Z")
+
 
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "default": {
+            "()": TimezoneFormatter,
             "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
     },
@@ -26,3 +40,9 @@ logging_config = {
         "level": "INFO",
     },
 }
+
+
+def set_timezone(timezone_str: str):
+    """Set the timezone for logging."""
+    TimezoneFormatter.timezone = pytz.timezone(timezone_str)
+    logging.info(f"Logging timezone set to: {TimezoneFormatter.timezone}")

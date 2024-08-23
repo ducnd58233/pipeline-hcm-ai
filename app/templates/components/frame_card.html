@@ -1,22 +1,33 @@
-<div class="frame-card">
-    {% if frame.frame_path %}
-    <img src="{{ frame.frame_path }}" alt="Frame {{ frame.id }}">
-    {% else %}
-    <div class="placeholder-image">No image available</div>
-    {% endif %}
+<div class="frame-card" id="frame-{{ frame.id }}">
+    <form hx-post="/toggle_frame" hx-trigger="change" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML">
+        {% if frame.frame_path %}
+        <img src="{{ frame.frame_path }}" alt="Frame {{ frame.id }}">
+        {% else %}
+        <div class="placeholder-image">No image available</div>
+        {% endif %}
 
-    <p>Frame ID: {{ frame.id }}</p>
+        {% if frame.id %}
+        <p>Frame ID: {{ frame.id }}</p>
+        <input type="hidden" name="frame_id" value="{{ frame.id }}">
+        {% endif %}
 
-    {% if frame.score is not none %}
-    <p>Similarity Score: {{ frame.score|round(4) }}</p>
-    {% endif %}
+        {% if frame.score is defined %}
+        <p>Similarity Score: {{ frame.score|round(4) if frame.score is not none else 'N/A' }}</p>
+        <input type="hidden" name="score" value="{{ frame.score|round(4) if frame.score is not none else '' }}">
+        {% else %}
+        <input type="hidden" name="score" value="">
+        {% endif %}
 
-    <input type="checkbox" hx-post="/toggle_frame" hx-vals='{"frame_id": "{{ frame.id }}"}' hx-swap="none" hx-ws="true"
-        {% if frame.selected %}checked{% endif %}>
+        <label for="checkbox-{{ frame.id }}">
+            <input type="checkbox" id="checkbox-{{ frame.id }}" name="frame_id" value="{{ frame.id }}" {% if
+                frame.selected %}checked{% endif %}>
+            Select Frame
+        </label>
 
-    {% if selected_frame %}
-    <button hx-post="/submit_frame" hx-target="#confirm-submit-modal">
-        Submit
-    </button>
-    {% endif %}
+        {% if selected_frame %}
+        <button type="submit">
+            Submit
+        </button>
+        {% endif %}
+    </form>
 </div>

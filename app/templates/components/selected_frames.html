@@ -1,7 +1,11 @@
-<div class="selected-frames">
+<div id="selected-frames">
+    {% if frames %}
     {% for frame in frames %}
-    {% with selected_frame=True %}
+    {% with frame=frame %}
     {% include 'components/frame_card.html' %}
     {% endwith %}
     {% endfor %}
+    {% else %}
+    <p>No frames selected.</p>
+    {% endif %}
 </div>
