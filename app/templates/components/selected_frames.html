@@ -1,8 +1,3 @@
-<div class="selected-frames">
-    {% for frame in frames %}
-    {% include 'components/frame_card.html' with context %}
-    {% endfor %}
-</div>
 <div class="pagination">
     {% if frames %}
     <button hx-get="/get_selected_frames" hx-trigger="click" hx-target="#selected-frames"
@@ -10,4 +5,10 @@
         Load More
     </button>
     {% endif %}
+</div>
+
+<div class="selected-frames">
+    {% for frame in frames %}
+    {% include 'components/frame_card.html' with context %}
+    {% endfor %}
 </div>

@@ -1,70 +1,70 @@
+import os
+import logging
 import json
 from config import Config
-import logging
+from typing import Dict, Optional
+from pydantic import BaseModel, Field
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 
-class FrameMetadata:
-    _metadata = None
-    _index_to_id = None
+class FrameMetadataModel(BaseModel):
+    id: str
+    shot_index: int
+    frame_index: int
+    timestamp: float
+    video_path: str
+    frame_path: str
+    score: Optional[float] = Field(default=None)
+    selected: Optional[bool] = Field(default=None)
 
-    def __init__(self, frame_id, shot_index, frame_index, timestamp, video_path, frame_path):
-        self.id = frame_id
-        self.shot_index = shot_index
-        self.frame_index = frame_index
-        self.timestamp = timestamp
-        self.video_path = video_path
-        self.frame_path = frame_path
+
+class FrameMetadata:
+    _metadata: Dict[str, FrameMetadataModel] = {}
+    _index_to_id: Dict[int, str] = {}
 
     @classmethod
     async def load_metadata(cls):
-        if cls._metadata is None:
+        if not cls._metadata:
             logger.info(
                 f"Loading metadata from {Config.KEYFRAMES_METADATA_PATH}")
             with open(Config.KEYFRAMES_METADATA_PATH, 'r') as f:
-                cls._metadata = json.load(f)
-            cls._index_to_id = {idx: frame_id for idx,
-                                frame_id in enumerate(cls._metadata.keys())}
+                raw_metadata = json.load(f)
+                cls._metadata = {
+                    frame_id: FrameMetadataModel(
+                        id=frame_id,
+                        shot_index=data['shot_index'],
+                        frame_index=data['frame_index'],
+                        timestamp=data['timestamp'],
+                        video_path=os.path.join('videos', data['video_path']),
+                        frame_path=os.path.join('keyframes', data['frame_path']),
+                        score=data.get('score'),
+                        selected=data.get('selected')
+                    )
+                    for frame_id, data in raw_metadata.items()
+                }
+                cls._index_to_id = {idx: frame_id for idx,
+                                    frame_id in enumerate(cls._metadata.keys())}
             logger.info(f"Loaded metadata for {len(cls._metadata)} frames")
 
     @classmethod
-    async def get_by_id(cls, frame_id):
+    async def get_by_frame_id(cls, frame_id: str) -> Optional[FrameMetadataModel]:
         await cls.load_metadata()
-        data = cls._metadata.get(frame_id)
-        if data:
-            return cls(
-                frame_id=frame_id,
-                shot_index=data['shot_index'],
-                frame_index=data['frame_index'],
-                timestamp=data['timestamp'],
-                video_path=data['video_path'],
-                frame_path=data['frame_path']
-            )
+        frame_data = cls._metadata.get(frame_id)
+        if frame_data:
+            return frame_data
         return None
 
     @classmethod
-    async def get_by_index(cls, index):
+    async def get_by_index(cls, index: int) -> Optional[FrameMetadataModel]:
         await cls.load_metadata()
         frame_id = cls._index_to_id.get(index)
         if frame_id:
-            return await cls.get_by_id(frame_id)
+            return cls.get_by_frame_id(frame_id)
         return None
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'shot_index': self.shot_index,
-            'frame_index': self.frame_index,
-            'timestamp': self.timestamp,
-            'video_path': self.video_path,
-            'frame_path': self.frame_path
-        }
-
     @staticmethod
-    async def get_total_frames():
+    async def get_total_frames() -> int:
         await FrameMetadata.load_metadata()
         return len(FrameMetadata._metadata)
-
-    def __repr__(self):
-        return f"<FrameMetadata id={self.id} frame_index={self.frame_index}>"

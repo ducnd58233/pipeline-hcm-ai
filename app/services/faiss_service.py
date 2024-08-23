@@ -2,9 +2,11 @@ import os
 import faiss
 import json
 import numpy as np
+from typing import List
 from config import Config
 from app.utils.clip_utils import get_clip_model, encode_text
 from app.services.nlp_service import preprocess_query
+from app.models import FrameMetadataModel
 
 
 class FAISSService:
@@ -29,7 +31,6 @@ class FAISSService:
 
         scores, indices = self.index.search(query_vector, k)
 
-        # Lọc kết quả cho trang hiện tại
         start = (page - 1) * per_page
         end = start + per_page
         return await self._get_results(scores[0][start:end], indices[0][start:end])
@@ -58,18 +59,25 @@ class FAISSService:
             similarity += 1
         return similarity
 
-    async def _get_results(self, scores, indices):
+    async def _get_results(self, scores, indices) -> List[FrameMetadataModel]:
         results = []
         for score, idx in zip(scores, indices):
             frame_id = self.index_to_id.get(idx)
             if frame_id in self.metadata:
-                results.append({
-                    'id': frame_id,
-                    'score': float(score),
-                    'frame_path': os.path.join('keyframes', self.metadata[frame_id]['frame_path']),
-                    'video_path': os.path.join('videos', self.metadata[frame_id]['video_path']),
-                    'timestamp': self.metadata[frame_id]['timestamp']
-                })
+                frame_data = self.metadata[frame_id]
+                frame_metadata_model = FrameMetadataModel(
+                    id=frame_id,
+                    shot_index=frame_data['shot_index'],
+                    frame_index=frame_data['frame_index'],
+                    timestamp=frame_data['timestamp'],
+                    video_path=os.path.join(
+                        'videos', frame_data['video_path']),
+                    frame_path=os.path.join(
+                        'keyframes', frame_data['frame_path']),
+                    score=float(score),
+                    selected=frame_data.get('selected', False)
+                )
+                results.append(frame_metadata_model)
         return results
 
 

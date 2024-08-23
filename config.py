@@ -6,7 +6,6 @@ BASE_DIR = os.getcwd()
 
 
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'some-secret')
     ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://localhost:9200')
 
     KEYFRAMES_DIR = f'{BASE_DIR}/notebooks/data_extraction/transnet/Keyframes'

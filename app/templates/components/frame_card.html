@@ -1,18 +1,14 @@
-<div class="frame-card {% if selected %}selected{% endif %}" id="frame-{{ frame.id }}">
+<div class="frame-card {% if frame.selected %}selected{% endif %}" id="frame-{{ frame.id }}">
     <img src="{{ frame.frame_path }}" alt="Frame {{ frame.id }}">
     <p>Frame ID: {{ frame.id }}</p>
-    <p>Score: {{ "%.4f"|format(frame.score) }}</p>
-    {% if in_search_results %}
-    <button hx-post="/select_frame" hx-trigger="click" hx-target="#selected-frames" hx-swap="beforeend"
-        hx-vals='{"frame_id": "{{ frame.id }}"}'
-        onclick="this.closest('.frame-card').classList.add('selected'); document.body.dispatchEvent(new CustomEvent('frameSelected', { detail: { frameId: '{{ frame.id }}' } }));">
-        Select
-    </button>
-    {% else %}
-    <button hx-post="/deselect_frame" hx-trigger="click" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML"
-        hx-vals='{"frame_id": "{{ frame.id }}"}'
-        onclick="document.body.dispatchEvent(new CustomEvent('frameSelected', { detail: { frameId: '{{ frame.id }}' } }));">
-        Deselect
-    </button>
+    {% if frame.score %}
+        <p>Score: {{ "%.4f"|format(frame.score) }}</p>
     {% endif %}
+
+    <label class="checkbox-container">
+        <input type="checkbox" hx-post="/toggle_frame" hx-trigger="click" hx-target="#frame-{{ frame.id }}"
+            hx-swap="outerHTML" name="selected_frames" value="{{ frame.id }}" {% if frame.selected %}checked{% endif %}
+            hx-vals='{"frame_id": "{{ frame.id }}", "score": "{{ frame.score }}", "selected": "{{ frame.selected }}"}'>
+        <span class="checkmark"></span>
+    </label>
 </div>
