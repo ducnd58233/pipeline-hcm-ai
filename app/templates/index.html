@@ -1,18 +1,46 @@
 {% extends "base.html" %}
 {% block content %}
 
-<script src="https://unpkg.com/htmx.org@1.9.6"></script>
 <script>
     document.body.addEventListener('htmx:wsConnected', function (evt) {
         console.log('WebSocket connected');
     });
 
-    document.body.addEventListener('htmx:wsAfterMessage', function (evt) {
-        if (evt.detail.message.action === 'update_selected_frames') {
-            htmx.trigger('#selected-frames', 'frameSelected');
+    document.body.addEventListener('htmx:wsAfterSend', function (event) {
+        var checkbox = event.detail.elt;
+        var frameId = checkbox.value;
+        var isChecked = checkbox.checked;
+
+        // Cập nhật UI dựa trên trạng thái mới của checkbox
+        var frameCard = document.getElementById('frame-' + frameId);
+        if (frameCard) {
+            if (isChecked) {
+                frameCard.classList.add('selected');
+            } else {
+                frameCard.classList.remove('selected');
+            }
+        }
+    });
+
+    document.body.addEventListener('htmx:wsAfterMessage', function (event) {
+        var data = JSON.parse(event.detail.message);
+        if (data.action === 'update_frame') {
+            var checkbox = document.getElementById('checkbox-' + data.frame_id);
+            if (checkbox) {
+                checkbox.checked = data.selected;
+            }
+            var frameCard = document.getElementById('frame-' + data.frame_id);
+            if (frameCard) {
+                if (data.selected) {
+                    frameCard.classList.add('selected');
+                } else {
+                    frameCard.classList.remove('selected');
+                }
+            }
         }
     });
 </script>
+
 
 <h1>Video Retrieval System</h1>
 
