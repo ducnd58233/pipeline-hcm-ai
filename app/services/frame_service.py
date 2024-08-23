@@ -1,7 +1,7 @@
 from app.error import FrameNotFoundError
 from app.services.redis_service import redis_service
 from app.models import FrameMetadata, FrameMetadataModel
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 import json
 import logging
 from datetime import datetime
@@ -15,12 +15,12 @@ class FrameService:
         self.redis_service = redis_service
         self.timezone = pytz.timezone('Asia/Ho_Chi_Minh')
 
-    async def toggle_frame_selection(self, user_id: str, frame_id: str, score: float) -> bool:
+    async def toggle_frame_selection(self, user_id: str, frame_id: str, score: float) -> Tuple[bool, FrameMetadataModel]:
         try:
             key = self.__get_selected_frames_key(user_id)
             frame_key = self.__get_frame_key(frame_id)
 
-            current_time = datetime.now(self.timezone)
+            current_time = datetime.now(self.timezone).timestamp()
             logger.info(
                 f"Toggle frame selection - User: {user_id}, Frame: {frame_id}, Time: {current_time}, Timezone: {self.timezone}")
 
@@ -34,18 +34,24 @@ class FrameService:
                 frame_dict = frame.model_dump()
                 frame_dict["selected"] = "true"
                 frame_dict["score"] = str(score)
-                self.redis_service.add_to_set(key, frame_id)
+                frame_dict["selected_time"] = str(current_time)
+                self.redis_service.zadd(key, {frame_id: current_time})
                 self.redis_service.set_hash(frame_key, frame_dict)
                 logger.info(f"New frame selected: {frame_id}")
-                return True
+                return True, FrameMetadataModel(**frame_dict)
 
-            frame['selected'] = str(frame.get(
-                'selected', 'true').lower() != 'true')
+            frame['selected'] = str(
+                frame.get('selected', 'true').lower() != 'true')
             frame['score'] = str(score)
-            self.set_frame(frame)
+            if frame['selected'].lower() == 'true':
+                frame['selected_time'] = str(current_time)
+                self.redis_service.zadd(key, {frame_id: current_time})
+            else:
+                self.redis_service.zrem(key, frame_id)
+            self.redis_service.set_hash(frame_key, frame)
             logger.info(
                 f"Frame selection toggled: {frame_id}, New state: {frame['selected']}")
-            return frame['selected'].lower() == 'true'
+            return frame['selected'].lower() == 'true', FrameMetadataModel(**self.__convert_frame_data(frame))
 
         except FrameNotFoundError as e:
             logger.error(str(e))
@@ -66,12 +72,17 @@ class FrameService:
 
         return FrameMetadataModel(**frame)
 
-    def get_selected_frames_list(self, user_id: str) -> List[Optional[FrameMetadataModel]]:
+    async def get_selected_frames_list(self, user_id: str) -> List[FrameMetadataModel]:
         key = self.__get_selected_frames_key(user_id)
-        selected_frame_ids = {
-            id for id in self.redis_service.get_set_members(key)}
-        return [FrameMetadataModel(**self.__convert_frame_data(self.redis_service.get_hash(self.__get_frame_key(frame_id))))
-                for frame_id in selected_frame_ids]
+        selected_frame_ids = self.redis_service.zrevrange(key, 0, -1)
+        frames = []
+        for frame_id in selected_frame_ids:
+            frame_data = self.redis_service.get_hash(
+                self.__get_frame_key(frame_id))
+            if frame_data and frame_data['selected']:
+                frames.append(FrameMetadataModel(
+                    **self.__convert_frame_data(frame_data)))
+        return frames
 
     def set_frame(self, frame_dict: Dict[str, Any]) -> None:
         key = self.__get_frame_key(frame_dict["id"])

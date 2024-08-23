@@ -1,15 +1,13 @@
 <div class="pagination">
     {% if page > 1 %}
-    <button hx-get="/search" hx-target="#search-results"
-        hx-vals='{"query": "{{ query }}", "page": {{ page - 1 }}, "per_page": {{ per_page }}}'>
+    <button hx-get="/search?query={{ query }}&page={{ page - 1 }}&per_page={{ per_page }}" hx-target="#search-results"
+        hx-indicator=".htmx-indicator">
         Previous
     </button>
     {% endif %}
-
     <span>Page {{ page }} of {{ total_pages }}</span>
-
-    {% if page < total_pages %} <button hx-get="/search" hx-target="#search-results"
-        hx-vals='{"query": "{{ query }}", "page": {{ page + 1 }}, "per_page": {{ per_page }}}'>
+    {% if page < total_pages %} <button hx-get="/search?query={{ query }}&page={{ page + 1 }}&per_page={{ per_page }}"
+        hx-target="#search-results" hx-indicator=".htmx-indicator">
         Next
         </button>
         {% endif %}
