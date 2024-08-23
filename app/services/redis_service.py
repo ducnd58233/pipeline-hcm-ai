@@ -1,5 +1,5 @@
 import redis
-from typing import Set, Dict, Any
+from typing import Set, Dict, Any, List
 
 
 class RedisService:
@@ -40,11 +40,41 @@ class RedisService:
         """Check if a value is a member of a Redis set."""
         return self.client.sismember(key, value)
 
+    def zadd(self, key: str, mapping: Dict[Any, float]):
+        """Add one or more members to a sorted set, or update its score if it already exists."""
+        self.client.zadd(key, mapping)
+
+    def zrem(self, key: str, *values):
+        """Remove one or more members from a sorted set."""
+        self.client.zrem(key, *values)
+
+    def zrevrange(self, key: str, start: int, end: int, withscores: bool = False) -> List[Any]:
+        """Return a range of members in a sorted set, by index, with scores ordered from high to low."""
+        result = self.client.zrevrange(key, start, end, withscores=withscores)
+        if withscores:
+            return [(self._decode_value(item[0]), item[1]) for item in result]
+        else:
+            return [self._decode_value(item) for item in result]
+
+    def zrank(self, key: str, member: Any) -> int:
+        """Determine the index of a member in a sorted set."""
+        return self.client.zrank(key, member)
+
+    def zrevrank(self, key: str, member: Any) -> int:
+        """Determine the index of a member in a sorted set, with scores ordered from high to low."""
+        return self.client.zrevrank(key, member)
+
+    def zscore(self, key: str, member: Any) -> float:
+        """Get the score associated with the given member in a sorted set."""
+        score = self.client.zscore(key, member)
+        return float(score) if score is not None else None
+
     def _decode_value(self, value: Any) -> Any:
         """Decode value from bytes to string, if possible."""
         try:
             return value.decode('utf-8')
         except AttributeError:
             return value
+
 
 redis_service = RedisService()

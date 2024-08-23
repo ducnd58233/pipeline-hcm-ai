@@ -186,6 +186,7 @@ uvicorn==0.30.6
 virtualenv==20.26.3
 wcwidth==0.2.13
 webassets==2.0
+websockets==13.0
 Werkzeug==2.3.3
 wrapt==1.14.1
 wsproto==1.2.0
