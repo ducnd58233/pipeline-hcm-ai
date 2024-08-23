@@ -3,6 +3,7 @@ from fastapi.websockets import WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
+from app.services.csv_service import save_single_frame_to_csv
 from app.services.faiss_service import faiss_service
 from app.services.frame_service import frame_service
 from app.error import FrameNotFoundError
@@ -142,12 +143,36 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str = Depends(get_us
         connections.remove(websocket)
 
 
-@router.post("/submit_frame", response_class=HTMLResponse)
-async def submit_frame(request: Request, user_id: str = Depends(get_user_id)):
-    return templates.TemplateResponse(confirm_submit_modal, {"request": request})
+@router.post("/submit_single_frame", response_class=HTMLResponse)
+async def submit_single_frame(request: Request, frame_id: str = Form(...)):
+    return templates.TemplateResponse("modals/confirm_submit.html", {"request": request, "frame_id": frame_id})
 
 
-@router.post("/confirm_submit", response_class=HTMLResponse)
-async def confirm_submit(request: Request, user_id: str = Depends(get_user_id)):
-    await frame_service.clear_all_selected_frames(user_id)
-    return templates.TemplateResponse(refresh_all_component, {"request": request})
+@router.post("/confirm_submit_single", response_class=HTMLResponse)
+async def confirm_submit_single(request: Request, frame_id: str = Form(...), user_id: str = Depends(get_user_id)):
+    try:
+        frame = await frame_service.get_frame_data(frame_id)
+        await save_single_frame_to_csv(frame)
+        await frame_service.clear_all_selected_frames(user_id)
+
+        response = templates.TemplateResponse(
+            "index.html", {"request": request})
+        response.headers["HX-Trigger"] = "refreshAll"
+        return response
+    except Exception as e:
+        logger.error(f"Error in confirm_submit_single: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while processing your submission")
+
+
+@router.get("/refresh_components", response_class=HTMLResponse)
+async def refresh_components(request: Request, user_id: str = Depends(get_user_id)):
+    selected_frames = await frame_service.get_selected_frames_list(user_id)
+    return templates.TemplateResponse("components/refresh_all.html", {
+        "request": request,
+        "selected_frames": selected_frames
+    })
+
+@router.get("/close_modal", response_class=HTMLResponse)
+async def close_modal():
+    return ""
