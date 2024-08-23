@@ -1,10 +1,16 @@
 import redis
 from typing import Set, Dict, Any, List
 
+from config import Config
+
 
 class RedisService:
-    def __init__(self, host: str = 'localhost', port: int = 6379, db: int = 0):
-        self.client = redis.Redis(host=host, port=port, db=db)
+    def __init__(self):
+        self.client = redis.Redis(
+            host=Config.REDIS_HOST,
+            port=Config.REDIS_PORT,
+            db=Config.REDIS_DB
+        )
 
     def add_to_set(self, key: str, value: Any):
         """Add a value to a Redis set."""
