@@ -68,6 +68,20 @@ class RedisService:
         """Get the score associated with the given member in a sorted set."""
         score = self.client.zscore(key, member)
         return float(score) if score is not None else None
+    
+    def zrange(self, key: str, start: int, end: int, desc: bool = False, withscores: bool = False) -> List[Any]:
+        """Return a range of members in a sorted set."""
+        if desc:
+            result = self.client.zrevrange(
+                key, start, end, withscores=withscores)
+        else:
+            result = self.client.zrange(key, start, end, withscores=withscores)
+
+        if withscores:
+            return [(self._decode_value(item[0]), item[1]) for item in result]
+        else:
+            return [self._decode_value(item) for item in result]
+
 
     def _decode_value(self, value: Any) -> Any:
         """Decode value from bytes to string, if possible."""

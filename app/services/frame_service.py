@@ -106,6 +106,22 @@ class FrameService:
         if 'timestamp' in converted_frame:
             converted_frame['timestamp'] = float(converted_frame['timestamp'])
         return converted_frame
+    
+    async def remove_selected_frame(self, user_id: str, frame_id: str):
+        key = self.__get_selected_frames_key(user_id)
+        self.redis_service.zrem(key, frame_id)
+        frame_key = self.__get_frame_key(frame_id)
+        frame_data = self.redis_service.get_hash(frame_key)
+        if frame_data:
+            frame_data['selected'] = 'false'
+            self.redis_service.set_hash(frame_key, frame_data)
+            
+    async def clear_all_selected_frames(self, user_id: str):
+        key = self.__get_selected_frames_key(user_id)
+        selected_frame_ids = self.redis_service.zrange(key, 0, -1)
+        for frame_id in selected_frame_ids:
+            await self.remove_selected_frame(user_id, frame_id)
+        self.redis_service.delete_key(key)
 
     def __get_frame_key(self, frame_id):
         return f"frame_data:{frame_id}"

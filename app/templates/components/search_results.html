@@ -1,20 +1,13 @@
-<div class="pagination">
-    {% if page > 1 %}
-    <button hx-get="/search?query={{ query }}&page={{ page - 1 }}&per_page={{ per_page }}" hx-target="#search-results"
-        hx-indicator=".htmx-indicator">
-        Previous
-    </button>
+<div id="search-results">
+    {% if results %}
+    <p>Found {{ total_results }} results for "{{ query }}"</p>
+    {% include 'components/pagination.html' %}
+    <div class="frame-container">
+        {% for frame in results %}
+        {% include 'components/frame_card.html' %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No results found for "{{ query }}"</p>
     {% endif %}
-    <span>Page {{ page }} of {{ total_pages }}</span>
-    {% if page < total_pages %} <button hx-get="/search?query={{ query }}&page={{ page + 1 }}&per_page={{ per_page }}"
-        hx-target="#search-results" hx-indicator=".htmx-indicator">
-        Next
-        </button>
-        {% endif %}
-</div>
-
-<div class="search-results">
-    {% for frame in results %}
-    {% include 'components/frame_card.html' with context %}
-    {% endfor %}
 </div>
