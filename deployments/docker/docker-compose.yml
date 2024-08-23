@@ -2,6 +2,13 @@ version: '3.8'
 name: 'hcm-ai'
 
 services:
+  redis:
+      image: redis:latest
+      ports:
+        - "6379:6379"
+      volumes:
+        - redis_data:/data
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
     container_name: elasticsearch
@@ -16,4 +23,6 @@ services:
 
 volumes:
   esdata:
+    driver: local
+  redis_data:
     driver: local
