@@ -1,8 +1,8 @@
-<div id="search-results">
+<div id="search-results" class="{% if not results %}empty{% endif %}">
     {% if results %}
-    <p>Found {{ total_results }} results for "{{ query }}"</p>
-    {% include 'components/pagination.html' %}
-    <div class="frame-container">
+    <div class="frame-container" hx-get="/search" hx-trigger="revealed"
+        hx-vals='{"page": "{{ page + 1 }}", "query": "{{ query }}"}' hx-target="#search-results .frame-container"
+        hx-swap="beforeend">
         {% for frame in results %}
         {% include 'components/frame_card.html' %}
         {% endfor %}

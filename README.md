@@ -36,6 +36,10 @@ pip install --default-timeout=1000 -r requirements.txt
 cp .env.example .env
 python run.py
 ```
+Or
+```
+uvicorn app.main:app --host 127.0.0.1 --port 5001 --reload
+```
 
 URL: http://127.0.0.1:5001/
 
