@@ -71,9 +71,6 @@ async def search(request: Request, query: str = "", page: int = 1, per_page: int
         }
         logger.debug(f"Context for template: {context}")
 
-        if request.headers.get("HX-Request"):
-            return templates.TemplateResponse(list_frame_card_component, context)
-        
         return templates.TemplateResponse(search_results_component, context)
     except Exception as e:
         logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
