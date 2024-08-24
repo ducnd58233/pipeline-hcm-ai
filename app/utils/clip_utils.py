@@ -2,7 +2,7 @@ import torch
 import open_clip
 
 
-def get_clip_model(model_name="ViT-B-32"):
+def get_clip_model(model_name="ViT-L-14"):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, _, preprocess = open_clip.create_model_and_transforms(
         model_name, device=device)

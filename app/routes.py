@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, Form, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocket
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
 from app.services.csv_service import save_single_frame_to_csv
@@ -14,7 +13,9 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 frame_card_component = "components/frame_card.html"
+list_frame_card_component = "components/frame_cards.html"
 selected_frame_component = "components/selected_frames.html"
+search_results_component = "components/search_results.html"
 refresh_all_component = "components/refresh_all.html"
 confirm_submit_modal = "modals/confirm_submit.html"
 
@@ -53,30 +54,31 @@ async def index(request: Request):
 @router.get("/search", response_class=HTMLResponse)
 async def search(request: Request, query: str = "", page: int = 1, per_page: int = 20):
     try:
+        results = []
+        
         if query.strip():
             logger.info(f"Searching for query: {query}, page: {page}")
             results = await faiss_service.search(query, page=page, per_page=per_page, extra_k=50)
-            total_results = len(results)
-            total_pages = (total_results + per_page - 1) // per_page
-        else:
-            results = []
-            total_results = 0
-            total_pages = 0
+            logger.info(f"Founded: {len(results)}")
+        
 
-        return templates.TemplateResponse("components/search_results.html", {
+        context = {
             "request": request,
             "results": results,
-            "page": page,
-            "total_pages": total_pages,
             "query": query,
-            "per_page": per_page,
-            "total_results": total_results
-        })
+            "page": page,
+            "per_page": per_page
+        }
+        logger.debug(f"Context for template: {context}")
+
+        if request.headers.get("HX-Request"):
+            return templates.TemplateResponse(list_frame_card_component, context)
+        
+        return templates.TemplateResponse(search_results_component, context)
     except Exception as e:
         logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail="An error occurred while searching. Please try again later.")
-
 
 @router.post("/search", response_class=HTMLResponse)
 async def search_post(request: Request, query: str = Form(...), page: int = Form(1), per_page: int = Form(20)):

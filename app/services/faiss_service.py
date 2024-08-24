@@ -20,20 +20,18 @@ class FAISSService:
         self.index_to_id = {idx: key for key, idx in self.id_to_index.items()}
 
     async def search(self, query, page=1, per_page=20, extra_k=50):
-        if isinstance(query, str):
-            query_vector = await self.preprocess_query(query)
-        elif isinstance(query, dict):
-            query_vector = await self._metadata_to_vector(query)
-        else:
-            raise ValueError("Invalid query type. Expected string or dict.")
-
+        query_vector = await self.preprocess_query(query)
         k = page * per_page + extra_k
 
         scores, indices = self.index.search(query_vector, k)
 
         start = (page - 1) * per_page
         end = start + per_page
-        return await self._get_results(scores[0][start:end], indices[0][start:end])
+        results = await self._get_results(scores[0][start:end], indices[0][start:end])
+
+        results.sort(key=lambda x: x.score, reverse=True)
+
+        return results
 
     async def preprocess_query(self, query):
         processed_query = await preprocess_query(query)
@@ -44,6 +42,28 @@ class FAISSService:
                 query_vector.shape[1], self.index.d)]
             query_vector = padded_vector
         return query_vector
+    
+    async def _get_results(self, scores, indices) -> List[FrameMetadataModel]:
+        results = []
+        for score, idx in zip(scores, indices):
+            frame_id = self.index_to_id.get(idx)
+            if frame_id in self.metadata:
+                frame_data = self.metadata[frame_id]
+                similarity_score = self._calculate_similarity_score(score)
+                frame_metadata_model = FrameMetadataModel(
+                    id=frame_id,
+                    shot_index=frame_data['shot_index'],
+                    frame_index=frame_data['frame_index'],
+                    timestamp=frame_data['timestamp'],
+                    video_path=os.path.join(
+                        'videos', frame_data['video_path']),
+                    frame_path=os.path.join(
+                        'keyframes', frame_data['frame_path']),
+                    score=similarity_score,
+                    selected=frame_data.get('selected', False)
+                )
+                results.append(frame_metadata_model)
+        return results
 
     async def _metadata_to_vector(self, query_metadata):
         most_similar_frame = max(self.metadata.items(),
@@ -51,32 +71,8 @@ class FAISSService:
         frame_index = self.id_to_index[most_similar_frame]
         return self.index.reconstruct(frame_index).reshape(1, -1)
 
-    def _calculate_similarity(self, query_metadata, frame_metadata):
-        similarity = 0
-        if query_metadata.get('video_path') == frame_metadata.get('video_path'):
-            similarity += 1
-        if abs(query_metadata.get('timestamp', 0) - frame_metadata.get('timestamp', 0)) < 1:
-            similarity += 1
-        return similarity
-
-    async def _get_results(self, scores, indices) -> List[FrameMetadataModel]:
-        results = []
-        for score, idx in zip(scores, indices):
-            frame_id = self.index_to_id.get(idx)
-            if frame_id in self.metadata:
-                frame_data = self.metadata[frame_id]
-                frame_metadata_model = FrameMetadataModel(
-                    id=frame_id,
-                    shot_index=frame_data['shot_index'],
-                    frame_index=frame_data['frame_index'],
-                    timestamp=frame_data['timestamp'],
-                    video_path=os.path.join('videos', frame_data['video_path']),
-                    frame_path=os.path.join('keyframes', frame_data['frame_path']),
-                    score=float(score),
-                    selected=frame_data.get('selected', False)
-                )
-                results.append(frame_metadata_model)
-        return results
+    def _calculate_similarity_score(self, faiss_score):
+        return 1 / (1 + np.exp(-faiss_score))
 
 
 faiss_service = FAISSService()

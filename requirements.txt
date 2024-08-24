@@ -22,7 +22,6 @@ elastic-transport==8.15.0
 elasticsearch==8.14.0
 exceptiongroup==1.2.2
 executing==2.0.1
-faiss-cpu==1.7.2
 faiss-gpu==1.7.2
 fastapi==0.112.1
 ffmpeg-python==0.2.0
