@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class ClipVectorizer(AbstractVectorizer):
     def __init__(self, model_name="ViT-L-14", feature_shape=None):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
         self.model, _, self.preprocess = create_model_and_transforms(
             model_name, device=self.device)
         self.model.eval()
