@@ -12,7 +12,7 @@ class SearchService:
         self.batch_size = 100
         self.max_results = 1000
 
-    async def search(self, query: str, offset: int = 0, limit: int = 20) -> List[FrameMetadataModel]:
+    async def search(self, query: str, offset: int = 0, limit: int = 200) -> List[FrameMetadataModel]:
         query_vector = self.vectorizer.vectorize(query)
         all_results = []
         current_offset = 0
