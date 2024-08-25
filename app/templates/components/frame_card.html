@@ -10,10 +10,10 @@
     </div>
 
     <div class="frame-info">
-        <p>Frame ID: {{ frame.keyframe.id }}</p>
+        <p>Frame ID: {{ frame.id }}</p>
 
-        {% if frame.score is defined %}
-        <p>Similarity Score: {{ frame.score|round(4) if frame.score is not none else 'N/A' }}</p>
+        {% if frame.final_score is defined %}
+        <p>Similarity Score: {{ frame.final_score|round(4) if frame.final_score is not none else 'N/A' }}</p>
         {% endif %}
 
         <form hx-post="/toggle_frame" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML" hx-trigger="change"
