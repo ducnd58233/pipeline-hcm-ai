@@ -79,18 +79,17 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), final_score:
     try:
         logger.info(
             f"Received toggle request for frame_id: {frame_id}, score: {final_score}")
-        is_selected = frame_data_manager.toggle_frame_selection(
+        _ = frame_data_manager.toggle_frame_selection(
             frame_id, final_score)
         frame_data = frame_data_manager.get_frame_by_id(frame_id)
 
         if frame_data is None:
             raise FrameNotFoundError(f"Frame not found: {frame_id}")
 
-        return templates.TemplateResponse(
-            frame_card_component,
-            {"request": request, "frame": frame_data,
-                "is_selected_section": is_selected}
-        )
+        response = templates.TemplateResponse(
+            frame_card_component, {"request": request, "frame": frame_data})
+        response.headers["HX-Trigger"] = "frame-toggled"
+        return response
     except FrameNotFoundError as e:
         logger.error(f"Frame not found: {str(e)}")
         raise HTTPException(status_code=404, detail=str(e))
