@@ -1,0 +1,2 @@
+notebooks/indexing/faiss_clipv2_cosine_cpu.bin filter=lfs diff=lfs merge=lfs -text
+notebooks/indexing/faiss_clipv2_cosine_gpu.bin filter=lfs diff=lfs merge=lfs -text
