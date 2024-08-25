@@ -1,7 +1,8 @@
 import numpy as np
 import faiss
+from app.abstract_classes import AbstractIndexer
 
-class FaissIndexer:
+class FaissIndexer(AbstractIndexer):
     def __init__(self, index_path: str):
         self.index = faiss.read_index(index_path)
 
