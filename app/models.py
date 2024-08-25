@@ -201,6 +201,9 @@ class Score(BaseModel):
     def get_value(self) -> float:
         return float(self.value)
 
+class ObjectDetectionItem(BaseModel):
+    score: float
+    box: List[float]
 
 class FrameMetadataModel(BaseModel):
     id: str
