@@ -29,6 +29,7 @@ source venv/bin/activate
 ```
 pip install git+https://github.com/openai/CLIP.git
 pip install --default-timeout=1000 -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run 

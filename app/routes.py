@@ -44,7 +44,7 @@ async def index(request: Request):
 
 
 @router.get("/search", response_class=HTMLResponse)
-async def search(request: Request, query: str = "", page: int = 1, per_page: int = 20):
+async def search(request: Request, query: str = "", page: int = 1, per_page: int = 200):
     try:
         results = []
         if query.strip():
@@ -79,7 +79,7 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), final_score:
     try:
         logger.info(
             f"Received toggle request for frame_id: {frame_id}, score: {final_score}")
-        _ = frame_data_manager.toggle_frame_selection(
+        frame_data_manager.toggle_frame_selection(
             frame_id, final_score)
         frame_data = frame_data_manager.get_frame_by_id(frame_id)
 
