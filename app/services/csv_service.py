@@ -20,4 +20,5 @@ def _write_single_frame_csv(frame: FrameMetadataModel):
         writer = csv.writer(csvfile)
         if not file_exists:
             writer.writerow(['frame_id', 'frame_path', 'score'])
-        writer.writerow([frame.id, frame.frame_path, frame.score])
+        writer.writerow(
+            [frame.id, f"keyframes/{frame.keyframe.frame_path}", frame.score])
