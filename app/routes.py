@@ -18,13 +18,18 @@ from config import Config
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-vectorizer = ClipVectorizer()
+indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
+feature_shape = (indexer.index.d,)
+
+vectorizer = ClipVectorizer(feature_shape=feature_shape)
+
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 text_processor = TextProcessor()
 relevance_calculator = EnhancedRelevanceCalculator(text_processor)
 reranker = EnhancedReranker(relevance_calculator)
 
-search_service = SearchService(vectorizer, indexer, reranker)
+search_service = SearchService(
+    vectorizer, indexer, reranker, text_processor)
 
 frame_card_component = "components/frame_card.html"
 search_results_component = "components/search_results.html"

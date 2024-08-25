@@ -1,0 +1,9 @@
+{% for frame in results %}
+{% include 'components/frame_card.html' %}
+{% endfor %}
+{% if has_more %}
+<div hx-get="/search" hx-trigger="revealed" hx-vals='{"page": "{{ page + 1 }}", "query": "{{ query }}"}'
+    hx-target="#search-results .frame-container" hx-swap="beforeend">
+    <div class="htmx-indicator">Loading more results...</div>
+</div>
+{% endif %}
