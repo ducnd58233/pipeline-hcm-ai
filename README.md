@@ -3,7 +3,7 @@
 ## Setup 
 Create Conda:
 ```
-conda create -n hcm-ai python=3.11 -y
+conda create -n hcm-ai python=3.9 -y
 conda activate hcm-ai
 conda install ffmpeg
 ```
@@ -33,9 +33,10 @@ pip install --default-timeout=1000 -r requirements.txt
 
 ## Run 
 ```
-python app.py
+cp .env.example .env
+python run.py
 ```
 
-URL: http://0.0.0.0:5001/home?index=0
+URL: http://127.0.0.1:5001/
 
 
