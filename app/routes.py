@@ -123,12 +123,12 @@ async def remove_object_query():
 
 
 @router.post("/toggle_frame", response_class=HTMLResponse)
-async def toggle_frame(request: Request, frame_id: str = Form(...), final_score: float = Form(0.0)):
+async def toggle_frame(request: Request, frame_id: str = Form(...), score: float = Form(0.0)):
     try:
         logger.info(
-            f"Received toggle request for frame_id: {frame_id}, score: {final_score}")
+            f"Received toggle request for frame_id: {frame_id}, score: {score}")
         frame_data_manager.toggle_frame_selection(
-            frame_id, final_score)
+            frame_id, score)
         frame_data = frame_data_manager.get_frame_by_id(frame_id)
 
         if frame_data is None:

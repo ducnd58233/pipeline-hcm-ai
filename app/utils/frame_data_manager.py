@@ -48,7 +48,7 @@ class FrameDataManager:
         if frame:
             frame.selected = redis_service.is_member_of_set(
                 selected_frame_key, frame_id)
-            frame.score = redis_service.zscore(
+            frame.final_score = redis_service.zscore(
                 score, frame_id) or 0.0
         return frame
 
@@ -70,7 +70,7 @@ class FrameDataManager:
                 similar_frames.append(frame)
         return similar_frames
 
-    def toggle_frame_selection(self, frame_id: str, final_score: float = 0.0) -> bool:
+    def toggle_frame_selection(self, frame_id: str, score: float = 0.0) -> bool:
         frame = self.get_frame_by_id(frame_id)
         if not frame:
             return False
@@ -85,9 +85,9 @@ class FrameDataManager:
             frame.final_score = 0.0
         else:
             redis_service.add_to_set(selected_frame_key, frame_id)
-            redis_service.zadd(score_key, {frame_id: final_score})
+            redis_service.zadd(score_key, {frame_id: score})
             frame.selected = True
-            frame.final_score = final_score
+            frame.final_score = score
 
         return frame.selected
 
@@ -106,7 +106,7 @@ class FrameDataManager:
         for frame in self.frame_data.values():
             frame.selected = False
             frame.final_score = 0.0
-            frame.score = 0.0
+            frame.score.details = {}
 
         logger.info(
             f"Cleared all selected frames and scores for user {Config.USER_ID}")

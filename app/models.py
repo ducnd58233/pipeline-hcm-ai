@@ -26,6 +26,10 @@ class Score(BaseModel):
     value: float = 0.0
     details: Dict[str, float] = Field(default_factory=dict)
 
+    @property
+    def get_value(self) -> float:
+        return float(self.value)
+
 
 class FrameMetadataModel(BaseModel):
     id: str
@@ -42,7 +46,7 @@ class FrameMetadataModel(BaseModel):
 
     @property
     def final_score(self):
-        return self.score.value
+        return self.score.get_value
 
     @final_score.setter
     def final_score(self, value):
