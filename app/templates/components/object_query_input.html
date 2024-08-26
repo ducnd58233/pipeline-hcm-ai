@@ -1,0 +1,7 @@
+<div class="object-query-input">
+    <input type="text" name="object_name[]" placeholder="Object name">
+    <input type="number" name="object_count[]" placeholder="Count" min="1" value="1">
+    <button hx-get="/remove_object_query" hx-target="closest .object-query-input" hx-swap="outerHTML">
+        Remove
+    </button>
+</div>

@@ -1,73 +1,74 @@
-from typing import List
 import asyncio
-from app.models import FrameMetadataModel
-from app.abstract_classes import AbstractVectorizer, AbstractIndexer, AbstractReranker
-from app.utils.frame_data_manager import frame_data_manager
 import logging
+from typing import List, Dict, Any
+from app.models import SearchResult, FrameMetadataModel
+from app.services.searcher.abstract_searcher import AbstractSearcher
 
 logger = logging.getLogger(__name__)
 
+
 class SearchService:
-    def __init__(self, vectorizer: AbstractVectorizer, indexer: AbstractIndexer, reranker: AbstractReranker, text_processor):
-        self.vectorizer = vectorizer
-        self.indexer = indexer
-        self.reranker = reranker
-        self.text_processor = text_processor
-        self.batch_size = 100
-        self.max_results = 1000
+    def __init__(self, searchers: Dict[str, AbstractSearcher], weights: Dict[str, float]):
+        self.searchers = searchers
+        self.weights = weights
 
-    async def search(self, query: str, offset: int = 0, limit: int = 200) -> List[FrameMetadataModel]:
-        query_structure = await self.text_processor.parse_long_query(query)
-        logger.info(f"Query structure: {query_structure}")
-        all_results = []
-        search_tasks = []
+    async def search(self, query: str, object_query: Dict[str, Any] = None, page: int = 1, per_page: int = 20) -> SearchResult:
+        try:
+            logger.info(
+                f"Performing combined search for query: {query}, object_query: {object_query}, page: {page}, per_page: {per_page}")
 
-        for query_part in query_structure:
-            if isinstance(query_part, list):
-                sub_query = " ".join(query_part)
-            elif isinstance(query_part, str):
-                sub_query = query_part
-            else:
-                continue
+            search_tasks = []
+            for searcher_name, searcher in self.searchers.items():
+                if searcher_name == 'object' and object_query:
+                    search_tasks.append((searcher_name, searcher.search(
+                        object_query, page=1, per_page=100)))
+                elif searcher_name != 'object':
+                    search_tasks.append(
+                        (searcher_name, searcher.search(query, page=1, per_page=100)))
 
-            query_vector = self.vectorizer.vectorize(sub_query)
-            search_tasks.append(self._search_part(query_vector))
+            results = await asyncio.gather(*[task[1] for task in search_tasks])
+            searcher_results = {task[0]: result for task,
+                                result in zip(search_tasks, results)}
 
-        results = await asyncio.gather(*search_tasks)
-        for part_results in results:
-            all_results.extend(part_results)
+            merged_results = self.__merge_results(searcher_results)
+            final_results = self.__apply_weights_and_calculate_final_score(
+                merged_results)
+            paginated_results = self.__paginate_results(
+                final_results, page, per_page)
 
-        unique_results = list(
-            {result.id: result for result in all_results}.values())
-        reranked_results = self.reranker.rerank(
-            query, unique_results, query_structure)
+            logger.info(
+                f"Search completed. Total results: {len(final_results)}, Current page: {page}")
+            return paginated_results
+        except Exception as e:
+            logger.error(
+                f"Error occurred during search: {str(e)}", exc_info=True)
+            raise
 
-        return reranked_results[offset:offset+limit]
+    def __merge_results(self, searcher_results: Dict[str, SearchResult]) -> Dict[str, Dict[str, FrameMetadataModel]]:
+        merged = {}
+        for searcher_name, result in searcher_results.items():
+            for frame in result.frames:
+                if frame.id not in merged:
+                    merged[frame.id] = frame.model_copy()
+                    merged[frame.id].scores = {}
+                merged[frame.id].scores[searcher_name] = frame.score
+        return merged
 
-    async def _search_part(self, query_vector) -> List[FrameMetadataModel]:
-        results = []
-        current_offset = 0
+    def __apply_weights_and_calculate_final_score(self, merged_results: Dict[str, FrameMetadataModel]) -> List[FrameMetadataModel]:
+        for frame in merged_results.values():
+            frame.final_score = sum(self.weights.get(searcher, 1.0) * score
+                                    for searcher, score in frame.scores.items())
 
-        while len(results) < self.max_results:
-            batch_size = min(self.batch_size, self.max_results - len(results))
-            scores, indices = self.indexer.search(
-                query_vector, current_offset + batch_size)
+        return sorted(merged_results.values(), key=lambda x: x.final_score, reverse=True)
 
-            batch_results = self.get_frame_metadata(indices[0], scores[0])
-            results.extend(batch_results)
+    def __paginate_results(self, sorted_results: List[FrameMetadataModel], page: int, per_page: int) -> SearchResult:
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paged_frames = sorted_results[start_idx:end_idx]
 
-            if len(batch_results) < batch_size:
-                break
-
-            current_offset += batch_size
-
-        return results
-
-    def get_frame_metadata(self, indices, scores) -> List[FrameMetadataModel]:
-        results = []
-        for idx, score in zip(indices, scores):
-            frame = frame_data_manager.get_frame_by_index(int(idx))
-            if frame:
-                frame.score = score
-                results.append(frame)
-        return results
+        return SearchResult(
+            frames=paged_frames,
+            total=len(sorted_results),
+            page=page,
+            has_more=end_idx < len(sorted_results)
+        )

@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+from typing import List
+from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.services.search_service import SearchService
+from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
+from app.services.searcher.text_searcher import TextSearcher
 from app.utils.frame_data_manager import frame_data_manager
 from app.error import FrameNotFoundError
 from app.log import logging_config, set_timezone
@@ -9,8 +12,8 @@ import logging
 from app.utils.indexer import FaissIndexer
 from app.utils.relevance_calculator import RelevanceCalculator
 from app.utils.reranker import Reranker
-from app.utils.text_processor import TextProcessor
-from app.utils.vectorizer import ClipVectorizer
+from app.utils.search_processor import TextProcessor, parse_object_query
+from app.utils.vectorizer import OpenClipVectorizer
 from app.services.csv_service import save_single_frame_to_csv
 
 from config import Config
@@ -21,19 +24,34 @@ templates = Jinja2Templates(directory="app/templates")
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 feature_shape = (indexer.index.d,)
 
-vectorizer = ClipVectorizer(feature_shape=feature_shape)
+vectorizer = OpenClipVectorizer(feature_shape=feature_shape)
 
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
+
 text_processor = TextProcessor()
+
+text_searcher = TextSearcher(vectorizer, indexer, text_processor)
+object_detection_searcher = ObjectDetectionSearcher()
+
 relevance_calculator = RelevanceCalculator(text_processor)
 reranker = Reranker(relevance_calculator)
 
-search_service = SearchService(
-    vectorizer, indexer, reranker, text_processor)
+searchers = {
+    'text': text_searcher,
+    'object': object_detection_searcher
+}
+
+weights = {
+    'text': 0.7,
+    'object': 0.3
+}
+
+search_service = SearchService(searchers, weights)
 
 frame_card_component = "components/frame_card.html"
 search_results_component = "components/search_results.html"
 selected_frame_component = "components/selected_frames.html"
+object_query_input_component = "components/object_query_input.html"
 refresh_all_component = "components/refresh_all.html"
 confirm_submit_modal = "modals/confirm_submit.html"
 
@@ -48,22 +66,35 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@router.get("/search", response_class=HTMLResponse)
-async def search(request: Request, query: str = "", page: int = 1, per_page: int = 200):
+@router.post("/search", response_class=HTMLResponse)
+async def search(
+    request: Request,
+    query: str = Form(""),
+    object_name: List[str] = Form([]),
+    object_count: List[int] = Form([]),
+    page: int = Form(1),
+    per_page: int = Form(200)
+):
     try:
         results = []
-        if query.strip():
-            logger.info(f"Searching for query: {query}, page: {page}")
-            offset = (page - 1) * per_page
-            results = await search_service.search(query, offset=offset, limit=per_page)
-            logger.info(f"Found: {len(results)} results")
+        object_query = {name: count for name, count in zip(
+            object_name, object_count) if name}
+        if query.strip() or object_query:
+            logger.info(
+                f"Searching for query: {query}, object_query: {object_query}, page: {page}")
+
+            results = await search_service.search(query, object_query=object_query, page=page, per_page=per_page)
+            logger.info(f"Found: {len(results.frames)} results")
 
         context = {
             "request": request,
-            "results": results,
+            "results": results.frames if results else [],
             "query": query,
+            "object_query": object_query,
             "page": page,
-            "per_page": per_page
+            "per_page": per_page,
+            "total": results.total if results else 0,
+            "has_more": results.has_more if results else False
         }
         logger.debug(f"Context for template: {context}")
 
@@ -74,10 +105,19 @@ async def search(request: Request, query: str = "", page: int = 1, per_page: int
             status_code=500, detail="An error occurred while searching. Please try again later.")
 
 
-@router.post("/search", response_class=HTMLResponse)
-async def search_post(request: Request, query: str = Form(...), page: int = Form(1), per_page: int = Form(20)):
-    return await search(request, query, page, per_page)
+@router.get("/add_object_query", response_class=HTMLResponse)
+async def add_object_query(request: Request):
+    return templates.TemplateResponse(object_query_input_component, {"request": request})
 
+
+@router.get("/remove_object_query", response_class=HTMLResponse)
+async def remove_object_query():
+    return ""
+
+
+@router.post("/search", response_class=HTMLResponse)
+async def search_post(request: Request, query: str = Form(...), object_query: str = Form(""), page: int = Form(1), per_page: int = Form(200)):
+    return await search(request, query, object_query, page, per_page)
 
 @router.post("/toggle_frame", response_class=HTMLResponse)
 async def toggle_frame(request: Request, frame_id: str = Form(...), final_score: float = Form(0.0)):

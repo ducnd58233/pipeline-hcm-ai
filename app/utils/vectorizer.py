@@ -4,23 +4,23 @@ from app.abstract_classes import AbstractVectorizer
 from sentence_transformers import SentenceTransformer
 from sklearn.preprocessing import normalize
 import logging
-from open_clip import create_model_and_transforms, tokenize
+from open_clip import create_model_and_transforms, get_tokenizer
 
 logger = logging.getLogger(__name__)
 
 
-class ClipVectorizer(AbstractVectorizer):
-    def __init__(self, model_name="ViT-L-14", feature_shape=None):
+class OpenClipVectorizer(AbstractVectorizer):
+    def __init__(self, model_name='ViT-L-14', pretrained='datacomp_xl_s13b_b90k', feature_shape=None):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model, _, self.preprocess = create_model_and_transforms(
-            model_name, device=self.device)
+        self.model, _, _ = create_model_and_transforms(
+            model_name, device=self.device, pretrained=pretrained)
         self.model.eval()
-        self.model = self.model.to(self.device)
+        self.tokenizer = get_tokenizer(model_name)
         self.feature_shape = feature_shape
 
     @torch.no_grad()
     def vectorize(self, text: str) -> np.ndarray:
-        text_tokens = tokenize([text]).to(self.device)
+        text_tokens = self.tokenizer([text]).to(self.device)
         text_features = self.model.encode_text(text_tokens)
         vector = text_features.cpu().numpy()[0]
         return self.resize_vector(vector)
@@ -38,7 +38,6 @@ class ClipVectorizer(AbstractVectorizer):
         resized_vector[slices] = vector[slices]
 
         return normalize(resized_vector.reshape(1, -1))[0]
-
 
 class SentenceTransformerVectorizer(AbstractVectorizer):
     def __init__(self, model_name='all-MiniLM-L6-v2', feature_shape=None):

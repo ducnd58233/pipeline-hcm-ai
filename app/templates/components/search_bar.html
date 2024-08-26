@@ -1,5 +1,16 @@
-<form hx-post="/search" hx-trigger="submit" hx-target="#search-results" hx-indicator=".htmx-indicator">
-    <input type="text" name="query" placeholder="Enter your search query">
+<form hx-post="/search" hx-target="#search-results" hx-indicator=".htmx-indicator">
+    <input type="text" name="query" placeholder="Enter text query" value="{{ query }}">
+
+    <div id="object-queries">
+    </div>
+
+    <button hx-get="/add_object_query" hx-target="#object-queries" hx-swap="beforeend">
+        Add Object Query
+    </button>
+
     <button type="submit">Search</button>
-    <div class="htmx-indicator">Searching...</div>
+
+    <div class="htmx-indicator">
+        Searching...
+    </div>
 </form>

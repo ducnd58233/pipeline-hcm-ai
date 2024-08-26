@@ -57,6 +57,9 @@ class FrameDataManager:
         if frame_id:
             return self.get_frame_by_id(frame_id)
         return None
+    
+    def get_all_frames(self) -> List[FrameMetadataModel]:
+        return list(self.frame_data.values())
 
     def search_similar_frames(self, query_vector: np.ndarray, k: int = 10) -> List[FrameMetadataModel]:
         _, indices = self.faiss_index.search(query_vector.reshape(1, -1), k)
@@ -94,7 +97,6 @@ class FrameDataManager:
         return [self.get_frame_by_id(frame_id) for frame_id in selected_frame_ids if frame_id in self.frame_data]
 
     def clear_all(self):
-        """Clear all selected frames and reset related states."""
         selected_frame_key = self.__get_selected_frames_key()
         score_key = self.__get_selected_frames_score_key()
 

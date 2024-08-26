@@ -1,14 +1,5 @@
 from typing import Optional, Dict, List
-import os
-import logging
-import json
-from app.error import FrameNotFoundError
-from config import Config
-from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
-from typing import Optional
-
-logger = logging.getLogger(__name__)
 
 
 class ObjectDetectionItem(BaseModel):
@@ -38,9 +29,17 @@ class FrameMetadataModel(BaseModel):
     score: float = Field(default=0.0)
     final_score: float = Field(default=0.0)
     selected: bool = Field(default=False)
-    
+    scores: Dict[str, float] = Field(default_factory=dict)
+
     def get_corrected_frame_path(self):
         return f"keyframes/{self.keyframe.frame_path}"
-    
+
     def get_corrected_video_path(self):
         return f"videos/{self.keyframe.video_path}"
+
+
+class SearchResult(BaseModel):
+    frames: List[FrameMetadataModel]
+    total: int
+    page: int
+    has_more: bool
