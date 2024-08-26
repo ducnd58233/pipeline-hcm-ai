@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class EnhancedRelevanceCalculator(AbstractRelevanceCalculator):
+class RelevanceCalculator(AbstractRelevanceCalculator):
     def __init__(self, text_processor):
         self.text_processor = text_processor
         nltk.download('wordnet', quiet=True)

@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routes import router
 from config import Config
-import asyncio
 
 app = FastAPI()
 

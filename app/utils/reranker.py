@@ -3,7 +3,7 @@ from app.abstract_classes import AbstractRelevanceCalculator, AbstractReranker
 from app.models import FrameMetadataModel
 
 
-class EnhancedReranker(AbstractReranker):
+class Reranker(AbstractReranker):
     def __init__(self, relevance_calculator: AbstractRelevanceCalculator):
         self.relevance_calculator = relevance_calculator
         self.weights = {

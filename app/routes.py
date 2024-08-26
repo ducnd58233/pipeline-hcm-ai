@@ -7,8 +7,8 @@ from app.error import FrameNotFoundError
 from app.log import logging_config, set_timezone
 import logging
 from app.utils.indexer import FaissIndexer
-from app.utils.relevance_calculator import EnhancedRelevanceCalculator
-from app.utils.reranker import EnhancedReranker
+from app.utils.relevance_calculator import RelevanceCalculator
+from app.utils.reranker import Reranker
 from app.utils.text_processor import TextProcessor
 from app.utils.vectorizer import ClipVectorizer
 from app.services.csv_service import save_single_frame_to_csv
@@ -25,8 +25,8 @@ vectorizer = ClipVectorizer(feature_shape=feature_shape)
 
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 text_processor = TextProcessor()
-relevance_calculator = EnhancedRelevanceCalculator(text_processor)
-reranker = EnhancedReranker(relevance_calculator)
+relevance_calculator = RelevanceCalculator(text_processor)
+reranker = Reranker(relevance_calculator)
 
 search_service = SearchService(
     vectorizer, indexer, reranker, text_processor)

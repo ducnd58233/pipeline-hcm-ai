@@ -1,3 +1,4 @@
+
 import nltk
 from nltk import word_tokenize
 from nltk.corpus import stopwords
@@ -5,6 +6,9 @@ import spacy
 from spacy.cli import download
 from googletrans import Translator
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 nltk.download('punkt', quiet=True)
 nltk.download('stopwords', quiet=True)
@@ -16,7 +20,6 @@ except OSError:
     download('en_core_web_sm')
     nlp = spacy.load('en_core_web_sm')
 
-
 class TextProcessor:
     def __init__(self):
         self.nlp = nlp
@@ -25,6 +28,8 @@ class TextProcessor:
 
     async def __preprocess_query(self, query):
         detected_lang = await asyncio.to_thread(self.translator.detect, query)
+        logger.info(f"Detected language: {detected_lang.lang}")
+
         if detected_lang.lang != 'en':
             translated = await asyncio.to_thread(self.translator.translate, query, dest='en')
             query = translated.text

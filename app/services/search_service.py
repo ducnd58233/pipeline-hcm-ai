@@ -3,7 +3,9 @@ import asyncio
 from app.models import FrameMetadataModel
 from app.abstract_classes import AbstractVectorizer, AbstractIndexer, AbstractReranker
 from app.utils.frame_data_manager import frame_data_manager
+import logging
 
+logger = logging.getLogger(__name__)
 
 class SearchService:
     def __init__(self, vectorizer: AbstractVectorizer, indexer: AbstractIndexer, reranker: AbstractReranker, text_processor):
@@ -16,7 +18,7 @@ class SearchService:
 
     async def search(self, query: str, offset: int = 0, limit: int = 200) -> List[FrameMetadataModel]:
         query_structure = await self.text_processor.parse_long_query(query)
-
+        logger.info(f"Query structure: {query_structure}")
         all_results = []
         search_tasks = []
 

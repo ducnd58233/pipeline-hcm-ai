@@ -5,7 +5,6 @@ import pytz
 
 class TimezoneFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
-        # Đặt múi giờ mặc định là Hồ Chí Minh
         timezone = pytz.timezone('Asia/Ho_Chi_Minh')
         conversion = datetime.fromtimestamp(record.created, timezone)
         if datefmt:
