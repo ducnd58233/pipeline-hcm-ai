@@ -27,7 +27,8 @@ class TextProcessor:
         self.stop_words = set(stopwords.words('english')) - {"and", "or"}
         self.translator = Translator()
 
-    async def __preprocess_query(self, query):
+    async def preprocess_query(self, query):
+        query = query.strip()
         detected_lang = await asyncio.to_thread(self.translator.detect, query)
         logger.info(f"Detected language: {detected_lang.lang}")
 
@@ -38,7 +39,7 @@ class TextProcessor:
         return query.lower()
 
     async def parse_long_query(self, query):
-        query = await self.__preprocess_query(query)
+        query = await self.preprocess_query(query)
         doc = self.nlp(query)
 
         query_structure = []

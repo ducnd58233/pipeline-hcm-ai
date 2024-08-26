@@ -1,16 +1,11 @@
-<form hx-post="/search" hx-target="#search-results" hx-indicator=".htmx-indicator">
-    <input type="text" name="query" placeholder="Enter text query" value="{{ query }}">
-
+<form id="search-form" hx-get="/search" hx-target="#search-results" hx-indicator=".htmx-indicator">
+    <input type="text" name="query" placeholder="Enter your search query">
     <div id="object-queries">
     </div>
-
-    <button hx-get="/add_object_query" hx-target="#object-queries" hx-swap="beforeend">
-        Add Object Query
-    </button>
-
-    <button type="submit">Search</button>
-
-    <div class="htmx-indicator">
-        Searching...
-    </div>
+    <input type="hidden" name="object_query_json" id="object_query_json" value="{}">
+    <button type="button" hx-get="/add_object_query" hx-target="#object-queries" hx-swap="beforeend">Add Object
+        Query</button>
+    <button type="submit" hx-on="htmx:configRequest"
+        hx-vals='{"object_query_json": document.getElementById("object_query_json").value}'>Search</button>
+    <div class="htmx-indicator">Searching...</div>
 </form>

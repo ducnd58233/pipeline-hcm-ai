@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from typing import List, Dict, Any
-from app.models import SearchResult, FrameMetadataModel
+from app.models import SearchResult, FrameMetadataModel, Score
 from app.services.searcher.abstract_searcher import AbstractSearcher
 
 logger = logging.getLogger(__name__)
@@ -12,19 +12,19 @@ class SearchService:
         self.searchers = searchers
         self.weights = weights
 
-    async def search(self, query: str, object_query: Dict[str, Any] = None, page: int = 1, per_page: int = 20) -> SearchResult:
+    async def search(self, text_query: str, object_query: Dict[str, Any] = None, page: int = 1, per_page: int = 20) -> SearchResult:
         try:
             logger.info(
-                f"Performing combined search for query: {query}, object_query: {object_query}, page: {page}, per_page: {per_page}")
+                f"Performing combined search for text query: {text_query}, object_query: {object_query}, page: {page}, per_page: {per_page}")
 
             search_tasks = []
             for searcher_name, searcher in self.searchers.items():
                 if searcher_name == 'object' and object_query:
                     search_tasks.append((searcher_name, searcher.search(
-                        object_query, page=1, per_page=100)))
-                elif searcher_name != 'object':
-                    search_tasks.append(
-                        (searcher_name, searcher.search(query, page=1, per_page=100)))
+                        object_query, page=1, per_page=per_page*page)))
+                if searcher_name == 'text' and text_query:
+                    search_tasks.append((searcher_name, searcher.search(
+                        text_query, page=1, per_page=per_page*page)))
 
             results = await asyncio.gather(*[task[1] for task in search_tasks])
             searcher_results = {task[0]: result for task,
@@ -44,22 +44,21 @@ class SearchService:
                 f"Error occurred during search: {str(e)}", exc_info=True)
             raise
 
-    def __merge_results(self, searcher_results: Dict[str, SearchResult]) -> Dict[str, Dict[str, FrameMetadataModel]]:
+    def __merge_results(self, searcher_results: Dict[str, SearchResult]) -> Dict[str, FrameMetadataModel]:
         merged = {}
         for searcher_name, result in searcher_results.items():
             for frame in result.frames:
                 if frame.id not in merged:
-                    merged[frame.id] = frame.model_copy()
-                    merged[frame.id].scores = {}
-                merged[frame.id].scores[searcher_name] = frame.score
+                    merged[frame.id] = frame.model_copy(deep=True)
+                merged[frame.id].score.details.update(frame.score.details)
         return merged
 
     def __apply_weights_and_calculate_final_score(self, merged_results: Dict[str, FrameMetadataModel]) -> List[FrameMetadataModel]:
         for frame in merged_results.values():
-            frame.final_score = sum(self.weights.get(searcher, 1.0) * score
-                                    for searcher, score in frame.scores.items())
+            frame.score.value = sum(self.weights.get(searcher, 1.0) * score
+                                    for searcher, score in frame.score.details.items())
 
-        return sorted(merged_results.values(), key=lambda x: x.final_score, reverse=True)
+        return sorted(merged_results.values(), key=lambda x: x.score.value, reverse=True)
 
     def __paginate_results(self, sorted_results: List[FrameMetadataModel], page: int, per_page: int) -> SearchResult:
         start_idx = (page - 1) * per_page

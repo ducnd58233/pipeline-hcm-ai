@@ -10,14 +10,14 @@
     <div class="frame-info">
         <p>Frame ID: {{ frame.id }}</p>
 
-        {% if frame.final_score is defined %}
-        <p>Similarity Score: {{ frame.final_score|round(4) if frame.final_score is not none else 'N/A' }}</p>
+        {% if frame.score.value is defined %}
+        <p>Similarity Score: {{ frame.score.value|round(4) if frame.score.value is not none else 'N/A' }}</p>
         {% endif %}
 
         <form hx-post="/toggle_frame" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML" hx-trigger="change"
             hx-indicator=".htmx-indicator">
             <input type="hidden" name="frame_id" value="{{ frame.id }}">
-            <input type="hidden" name="final_score" value="{{ frame.final_score }}">
+            <input type="hidden" name="final_score" value="{{ frame.score.value }}">
             <input type="checkbox" name="selected" {% if frame.selected %}checked{% endif %}>
             <div class="htmx-indicator">Loading...</div>
         </form>

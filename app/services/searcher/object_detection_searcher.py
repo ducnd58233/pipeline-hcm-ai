@@ -4,17 +4,19 @@ from scipy.sparse import load_npz
 from typing import Dict, Any
 import logging
 from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.models import SearchResult
+from app.models import Score, SearchResult
 from app.utils.frame_data_manager import frame_data_manager
+from app.utils.search_processor import TextProcessor
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 
 class ObjectDetectionSearcher(AbstractSearcher):
-    def __init__(self):
+    def __init__(self, text_processor: TextProcessor):
         self.vectorizer = self.__load_vectorizer()
         self.vectors = self.__load_vectors()
+        self.text_processor = text_processor
 
     def __load_vectorizer(self):
         vectorizer_path = os.path.join(
@@ -31,7 +33,7 @@ class ObjectDetectionSearcher(AbstractSearcher):
         logger.info(f"Performing object detection search with query: {query}")
 
         query_text = ' '.join(
-            [f"{obj} " * count for obj, count in query.items()])
+            [f"{await self.text_processor.preprocess_query(obj)} " * count for obj, count in query.items()])
         query_vector = self.vectorizer.transform([query_text])
 
         similarities = self.vectors.dot(query_vector.T).toarray().flatten()
@@ -45,10 +47,9 @@ class ObjectDetectionSearcher(AbstractSearcher):
 
         frames = []
         for idx, similarity in zip(result_indices, result_similarities):
-            frame_id = self.frame_ids[idx]
-            frame = await frame_data_manager.get_frame_by_id(frame_id)
+            frame = frame_data_manager.get_frame_by_index(idx)
             if frame:
-                frame.score = float(similarity)
+                frame.score = Score(details={'object': float(similarity)})
                 frames.append(frame)
 
         total_results = len(sorted_indices)

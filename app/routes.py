@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Request, Form, HTTPException
+import json
+from fastapi import APIRouter, Query, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.services.search_service import SearchService
@@ -12,7 +12,7 @@ import logging
 from app.utils.indexer import FaissIndexer
 from app.utils.relevance_calculator import RelevanceCalculator
 from app.utils.reranker import Reranker
-from app.utils.search_processor import TextProcessor, parse_object_query
+from app.utils.search_processor import TextProcessor
 from app.utils.vectorizer import OpenClipVectorizer
 from app.services.csv_service import save_single_frame_to_csv
 
@@ -31,7 +31,7 @@ indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 text_processor = TextProcessor()
 
 text_searcher = TextSearcher(vectorizer, indexer, text_processor)
-object_detection_searcher = ObjectDetectionSearcher()
+object_detection_searcher = ObjectDetectionSearcher(text_processor)
 
 relevance_calculator = RelevanceCalculator(text_processor)
 reranker = Reranker(relevance_calculator)
@@ -69,22 +69,19 @@ async def index(request: Request):
 @router.post("/search", response_class=HTMLResponse)
 async def search(
     request: Request,
-    query: str = Form(""),
-    object_name: List[str] = Form([]),
-    object_count: List[int] = Form([]),
-    page: int = Form(1),
-    per_page: int = Form(200)
+    query: str = "",
+    object_query: str = "",
+    page: int = Query(1, ge=1),
+    per_page: int = Query(200, ge=1, le=1000)
 ):
     try:
-        results = []
-        object_query = {name: count for name, count in zip(
-            object_name, object_count) if name}
-        if query.strip() or object_query:
-            logger.info(
-                f"Searching for query: {query}, object_query: {object_query}, page: {page}")
+        object_query_dict = json.loads(object_query) if object_query else {}
 
-            results = await search_service.search(query, object_query=object_query, page=page, per_page=per_page)
-            logger.info(f"Found: {len(results.frames)} results")
+        logger.info(
+            f"Searching for query: {query}, object_query: {object_query_dict}, page: {page}")
+
+        results = await search_service.search(query, object_query_dict, page=page, per_page=per_page)
+        logger.info(f"Found: {len(results.frames)} results")
 
         context = {
             "request": request,
@@ -104,6 +101,16 @@ async def search(
         raise HTTPException(
             status_code=500, detail="An error occurred while searching. Please try again later.")
 
+@router.get("/search", response_class=HTMLResponse)
+async def search_get(
+    request: Request,
+    query: str = "",
+    object_query_json: str = Query(default="{}"),
+    page: int = 1,
+    per_page: int = 200
+):
+    return await search(request, query, object_query_json, page, per_page)
+
 
 @router.get("/add_object_query", response_class=HTMLResponse)
 async def add_object_query(request: Request):
@@ -114,10 +121,6 @@ async def add_object_query(request: Request):
 async def remove_object_query():
     return ""
 
-
-@router.post("/search", response_class=HTMLResponse)
-async def search_post(request: Request, query: str = Form(...), object_query: str = Form(""), page: int = Form(1), per_page: int = Form(200)):
-    return await search(request, query, object_query, page, per_page)
 
 @router.post("/toggle_frame", response_class=HTMLResponse)
 async def toggle_frame(request: Request, frame_id: str = Form(...), final_score: float = Form(0.0)):

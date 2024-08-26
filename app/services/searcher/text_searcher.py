@@ -1,5 +1,5 @@
 from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.models import SearchResult
+from app.models import Score, SearchResult
 from app.utils.search_processor import TextProcessor
 from app.utils.vectorizer import OpenClipVectorizer
 from app.utils.indexer import FaissIndexer
@@ -25,15 +25,17 @@ class TextSearcher(AbstractSearcher):
                     part_query, top_k=per_page+offset)
                 frames = []
                 for result in similar_frames[offset:]:
-                    frame = frame_data_manager.get_frame_by_index(result['frame_index'])
+                    frame = frame_data_manager.get_frame_by_index(
+                        result['frame_index'])
                     if frame:
-                        frame.score = float(result['similarity'])
+                        frame.score = Score(
+                            details={'text': float(result['similarity'])})
                         frames.append(frame)
                 all_results.extend(frames)
 
         unique_results = {frame.id: frame for frame in all_results if frame}
         sorted_results = sorted(unique_results.values(),
-                                key=lambda x: x.score, reverse=True)
+                                key=lambda x: x.score.details.get('text', 0), reverse=True)
 
         return SearchResult(
             frames=sorted_results[:per_page],
