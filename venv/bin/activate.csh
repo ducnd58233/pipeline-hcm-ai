@@ -8,7 +8,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/home/jiggle/personal/competition/hcm-ai/Pipeline_HCM_AI/venv"
+setenv VIRTUAL_ENV "/home/heigatvu/my-project/competition/HCMC-AI/pipeline-hcm-ai/venv"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"
