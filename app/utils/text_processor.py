@@ -1,7 +1,6 @@
 import nltk
 from nltk import word_tokenize
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 import spacy
 from spacy.cli import download
 from googletrans import Translator
@@ -17,10 +16,11 @@ except OSError:
     download('en_core_web_sm')
     nlp = spacy.load('en_core_web_sm')
 
+
 class TextProcessor:
     def __init__(self):
         self.nlp = nlp
-        self.stop_words = set(stopwords.words('english'))
+        self.stop_words = set(stopwords.words('english')) - {"and", "or"}
         self.translator = Translator()
 
     async def __preprocess_query(self, query):
@@ -29,16 +29,12 @@ class TextProcessor:
             translated = await asyncio.to_thread(self.translator.translate, query, dest='en')
             query = translated.text
 
-        tokens = word_tokenize(query.lower())
-        filtered_tokens = [
-            word for word in tokens if word not in self.stop_words or word in {"and", "or"} or word.isdigit()]
-        processed_query = ' '.join(filtered_tokens)
+        return query.lower()
 
-        return processed_query
-    
     async def parse_long_query(self, query):
         query = await self.__preprocess_query(query)
         doc = self.nlp(query)
+
         query_structure = []
         current_chunk = []
 
@@ -48,14 +44,15 @@ class TextProcessor:
                     query_structure.append(current_chunk)
                     current_chunk = []
                 query_structure.append(token.text.lower())
-            elif token.pos_ in ["NOUN", "PROPN", "ADJ", "VERB", "NUM"]:
+            else:
                 current_chunk.append(token.text)
 
         if current_chunk:
             query_structure.append(current_chunk)
 
+        query_structure.append(doc.text.split())
+
         return query_structure
-    
 
     def tokenize_and_remove_stopwords(self, text):
         tokens = word_tokenize(text.lower())
