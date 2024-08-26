@@ -42,8 +42,8 @@ searchers = {
 }
 
 weights = {
-    'text': 0.7,
-    'object': 0.3
+    'text': 0.5,
+    'object': 0.5
 }
 
 search_service = SearchService(searchers, weights)

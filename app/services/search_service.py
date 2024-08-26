@@ -55,7 +55,7 @@ class SearchService:
 
     def __apply_weights_and_calculate_final_score(self, merged_results: Dict[str, FrameMetadataModel]) -> List[FrameMetadataModel]:
         for frame in merged_results.values():
-            frame.score.value = sum(self.weights.get(searcher, 1.0) * score
+            frame.score.value = sum(self.weights.get(searcher, 0.0) * score
                                     for searcher, score in frame.score.details.items())
 
         return sorted(merged_results.values(), key=lambda x: x.score.value, reverse=True)
