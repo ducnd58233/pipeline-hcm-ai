@@ -45,3 +45,9 @@ def set_timezone(timezone_str: str):
     """Set the timezone for logging."""
     TimezoneFormatter.timezone = pytz.timezone(timezone_str)
     logging.info(f"Logging timezone set to: {TimezoneFormatter.timezone}")
+
+
+logging.config.dictConfig(logging_config)
+logger = logging.getLogger(__name__)
+
+set_timezone('Asia/Ho_Chi_Minh')

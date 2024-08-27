@@ -1,6 +1,7 @@
 @import 'frame_card.css';
 @import 'modal.css';
 @import 'button.css';
+@import 'panel.css';
 
 body {
     font-family: Arial, sans-serif;

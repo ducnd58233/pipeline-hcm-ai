@@ -1,0 +1,57 @@
+<div id="drag-drop-panel" class="drag-drop-panel">
+    <h3>Objects & colors of the scene</h3>
+
+    <div class="panel-controls">
+        <div class="toggle-container">
+            Panel State: {{ panel_state }}
+        </div>
+
+        <div class="logic-selector">
+            Panel Logic: AND OR
+        </div>
+    </div>
+
+    <div class="icon-container">
+        {% for category in categories %}
+        <div class="icon-item" hx-post="/select_category?category={{ category }}" hx-trigger="click"
+            hx-target="#selected-category" hx-swap="innerHTML">
+            <img src="/static/icons/{{ category }}.jpeg" alt="{{ category }}">
+            <span>{{ category }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="selected-category">No category selected</div>
+
+    <div class="grid-container">
+        <div class="grid-cell grid-header"></div>
+        {% for col in 'abcdefg' %}
+        <div class="grid-cell grid-header">{{ col }}</div>
+        {% endfor %}
+
+        {% for row in range(7) %}
+        <div class="grid-cell grid-header">{{ row }}</div>
+        {% for col in 'abcdefg' %}
+        {% include 'components/grid_cell.html' %}
+        {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="grid-state-display">
+        <h4>Grid State:</h4>
+        {% if grid_state %}
+        {% for position, category in grid_state.items() %}
+        <p>Object: {{ category }} at position: Row {{ position[0] }}, Col {{ position[1] }}</p>
+        {% endfor %}
+        {% else %}
+        <p>No objects on the grid.</p>
+        {% endif %}
+    </div>
+
+    <div class="max-objects">
+        Max Objects:
+    </div>
+
+    <div class="action-buttons">
+    </div>
+</div>

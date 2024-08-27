@@ -5,7 +5,10 @@ from app.utils.vectorizer import OpenClipVectorizer
 from app.utils.indexer import FaissIndexer
 from app.utils.frame_data_manager import frame_data_manager
 import numpy as np
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class TextSearcher(AbstractSearcher):
     def __init__(self, vectorizer: OpenClipVectorizer, indexer: FaissIndexer, text_processor: TextProcessor):
@@ -14,8 +17,10 @@ class TextSearcher(AbstractSearcher):
         self.text_processor = text_processor
 
     async def search(self, query: str, page: int, per_page: int) -> SearchResult:
+        logger.info(f"Performing object text search with query: {query}")
         offset = (page - 1) * per_page
         query_structure = await self.text_processor.parse_long_query(query)
+        logger.info(f"Processed query: {query_structure}")
 
         all_results = []
         for part in query_structure:

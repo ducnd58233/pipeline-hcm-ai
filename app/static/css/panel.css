@@ -1,0 +1,122 @@
+.sidebar {
+    width: 300px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: #f8f9fa;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.drag-drop-panel {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.panel-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.icon-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+}
+
+.icon-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.icon-item span {
+    font-size: 0.7em;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: #f0f0f0;
+    margin-bottom: 20px;
+}
+
+.grid-cell {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.grid-cell:hover {
+    background-color: #e0e0e0;
+}
+
+.grid-header {
+    font-weight: bold;
+    background-color: #ddd;
+    font-size: 0.8em;
+    cursor: default;
+}
+
+.grid-cell img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+.selected-objects {
+    margin-top: 10px;
+    min-height: 50px;
+    border: 1px dashed #999;
+    padding: 5px;
+    font-size: 0.8em;
+}
+
+.selected-object {
+    display: inline-block;
+    margin: 2px;
+    padding: 2px 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+}
+
+.max-objects, .action-buttons {
+    margin-top: 10px;
+}
+
+.max-objects label {
+    font-size: 0.8em;
+}
+
+.max-objects input {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.action-buttons button {
+    margin-right: 5px;
+}

@@ -20,24 +20,42 @@ class ObjectDetectionSearcher(AbstractSearcher):
 
     def __load_vectorizer(self):
         vectorizer_path = os.path.join(
-            Config.METADATA_DIR, 'object_vectorizer.pkl')
+            Config.METADATA_DIR, 'bbox_vectorizer.pkl')
         with open(vectorizer_path, 'rb') as f:
             return pickle.load(f)
 
     def __load_vectors(self):
         vectors_path = os.path.join(
-            Config.METADATA_DIR, 'object_vectors.npz')
+            Config.METADATA_DIR, 'bbox_vectors.npz')
         return load_npz(vectors_path)
 
     async def search(self, query: Dict[str, Any], page: int, per_page: int) -> SearchResult:
         logger.info(f"Performing object detection search with query: {query}")
 
-        query_text = ' '.join(
-            [f"{await self.text_processor.preprocess_query(obj)} " * count for obj, count in query.items()])
+        if query['state'] == 'disabled':
+            return SearchResult(frames=[], total=0, page=page, has_more=False)
+
+        query_text = ' '.join([f"{await self.text_processor.preprocess_query(obj)} " for obj in query['objects']])
+        logger.info(f"Processed query: {query_text}")
+
+        if query['max_objects']:
+            max_obj_parts = query['max_objects'].split()
+            for i in range(0, len(max_obj_parts), 2):
+                obj = max_obj_parts[i+1]
+                count = int(max_obj_parts[i])
+                query_text += f" {obj} " * count
+
         query_vector = self.vectorizer.transform([query_text])
 
         similarities = self.vectors.dot(query_vector.T).toarray().flatten()
-        sorted_indices = similarities.argsort()[::-1]
+
+        if query['logic'] == 'and':
+            valid_indices = [i for i, sim in enumerate(
+                similarities) if sim >= len(query['objects'])]
+            sorted_indices = sorted(
+                valid_indices, key=lambda i: similarities[i], reverse=True)
+        else:
+            sorted_indices = similarities.argsort()[::-1]
 
         start = (page - 1) * per_page
         end = start + per_page

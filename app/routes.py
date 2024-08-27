@@ -1,4 +1,4 @@
-import json
+from typing import Dict, Tuple
 from fastapi import APIRouter, Query, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -6,6 +6,7 @@ from app.services.search_service import SearchService
 from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
 from app.services.searcher.text_searcher import TextSearcher
 from app.utils.frame_data_manager import frame_data_manager
+from app.utils.grid_manager import grid_manager
 from app.error import FrameNotFoundError
 from app.log import logging_config, set_timezone
 import logging
@@ -24,36 +25,23 @@ templates = Jinja2Templates(directory="app/templates")
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 feature_shape = (indexer.index.d,)
 
-vectorizer = OpenClipVectorizer(feature_shape=feature_shape)
-
-indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
-
-text_processor = TextProcessor()
-
-text_searcher = TextSearcher(vectorizer, indexer, text_processor)
-object_detection_searcher = ObjectDetectionSearcher(text_processor)
-
-relevance_calculator = RelevanceCalculator(text_processor)
-reranker = Reranker(relevance_calculator)
-
-searchers = {
-    'text': text_searcher,
-    'object': object_detection_searcher
-}
-
-weights = {
-    'text': 0.5,
-    'object': 0.5
-}
-
-search_service = SearchService(searchers, weights)
 
 frame_card_component = "components/frame_card.html"
 search_results_component = "components/search_results.html"
 selected_frame_component = "components/selected_frames.html"
 object_query_input_component = "components/object_query_input.html"
 refresh_all_component = "components/refresh_all.html"
+drag_drop_panel_component = "components/drag_drop_panel.html"
+grid_cell_component = "components/grid_cell.html"
+
 confirm_submit_modal = "modals/confirm_submit.html"
+
+
+# Global state
+global_panel_state = "enabled"
+global_panel_logic = "and"
+global_max_objects = ""
+grid_state: Dict[Tuple[int, int], str] = {(0, 0): 'cat'}
 
 logging.config.dictConfig(logging_config)
 logger = logging.getLogger(__name__)
@@ -63,53 +51,90 @@ set_timezone('Asia/Ho_Chi_Minh')
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    logger.info("Rendering index page")
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@router.post("/search", response_class=HTMLResponse)
-async def search(
-    request: Request,
-    query: str = "",
-    object_query: str = "",
-    page: int = Query(1, ge=1),
-    per_page: int = Query(200, ge=1, le=1000)
-):
-    try:
-        object_query_dict = json.loads(object_query) if object_query else {}
+@router.post("/start_drag", response_class=HTMLResponse)
+async def start_drag(request: Request, category: str = Form(...)):
+    logger.info(f"Starting drag for category: {category}")
+    return f'<input type="hidden" name="category" value="{category}">'
 
-        logger.info(
-            f"Searching for query: {query}, object_query: {object_query_dict}, page: {page}")
 
-        results = await search_service.search(query, object_query_dict, page=page, per_page=per_page)
-        logger.info(f"Found: {len(results.frames)} results")
+@router.post("/add_object_to_grid", response_class=HTMLResponse)
+async def add_object_to_grid(request: Request, row: int = Form(...), col: int = Form(...), category: str = Form(...)):
+    grid_manager.add_object(row, col, category)
 
-        context = {
-            "request": request,
-            "results": results.frames if results else [],
-            "query": query,
-            "object_query": object_query,
-            "page": page,
-            "per_page": per_page,
-            "total": results.total if results else 0,
-            "has_more": results.has_more if results else False
-        }
-        logger.debug(f"Context for template: {context}")
+    return templates.TemplateResponse("components/grid_cell.html", {
+        "request": request,
+        "row": row,
+        "col": col,
+        "grid_state": grid_manager.get_state()
+    })
 
-        return templates.TemplateResponse(search_results_component, context)
-    except Exception as e:
-        logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail="An error occurred while searching. Please try again later.")
 
-@router.get("/search", response_class=HTMLResponse)
-async def search_get(
-    request: Request,
-    query: str = "",
-    object_query_json: str = Query(default="{}"),
-    page: int = 1,
-    per_page: int = 200
-):
-    return await search(request, query, object_query_json, page, per_page)
+@router.post("/remove_object_from_grid", response_class=HTMLResponse)
+async def remove_object_from_grid(request: Request, row: int = Form(...), col: int = Form(...)):
+    grid_manager.remove_object(row, col)
+
+    return templates.TemplateResponse("components/grid_cell.html", {
+        "request": request,
+        "row": row,
+        "col": col,
+        "grid_state": grid_manager.get_state()
+    })
+
+
+@router.post("/update_panel_logic", response_class=HTMLResponse)
+async def update_panel_logic(request: Request, panel_logic: str = Form(...)):
+    global global_panel_logic
+    global_panel_logic = panel_logic
+    logger.info(f"Updated panel logic to: {panel_logic}")
+    return await get_drag_drop_panel(request)
+
+
+@router.post("/update_max_objects", response_class=HTMLResponse)
+async def update_max_objects(request: Request, max_objects: str = Form(...)):
+    global global_max_objects
+    global_max_objects = max_objects
+    logger.info(f"Updated max objects to: {max_objects}")
+    return await get_drag_drop_panel(request)
+
+
+@router.get("/drag_drop_panel", response_class=HTMLResponse)
+async def get_drag_drop_panel(request: Request):
+    categories = ["airplane", "bicycle",
+                  "bird", "boat", "cat", "dog", "person"]
+    logger.info("Rendering drag drop panel")
+    logger.debug(f"Current grid state: {grid_state}")
+    return templates.TemplateResponse("components/drag_drop_panel.html", {
+        "request": request,
+        "categories": categories,
+        "panel_state": global_panel_state,
+        "panel_logic": global_panel_logic,
+        "grid_state": grid_state,
+        "max_objects": global_max_objects
+    })
+
+
+@router.post("/clear_objects", response_class=HTMLResponse)
+async def clear_objects(request: Request):
+    global grid_state
+    grid_state.clear()
+    logger.info("Cleared all objects from grid")
+    return await get_drag_drop_panel(request)
+
+
+@router.post("/reset_panel", response_class=HTMLResponse)
+async def reset_panel(request: Request):
+    global global_panel_state, global_panel_logic, grid_state, global_max_objects
+    global_panel_state = "enabled"
+    global_panel_logic = "and"
+    grid_state.clear()
+    global_max_objects = ""
+    logger.info("Reset panel to default state")
+    return await get_drag_drop_panel(request)
+
 
 
 @router.get("/add_object_query", response_class=HTMLResponse)
