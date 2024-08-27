@@ -1,5 +1,5 @@
 .sidebar {
-    width: 300px;
+    width: 20vw;
     height: 100vh;
     position: fixed;
     top: 0;
@@ -50,12 +50,16 @@
     margin-top: 5px;
 }
 
+.icon-item.selected {
+    border: 2px solid #007bff;
+    background-color: #e9f7ff;
+}
+
 .grid-container {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: 1px;
     width: 100%;
-    aspect-ratio: 1 / 1;
     background-color: #f0f0f0;
     margin-bottom: 20px;
 }
@@ -66,9 +70,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
     cursor: pointer;
+    aspect-ratio: 1 / 1;
     transition: background-color 0.3s;
+    overflow: hidden;
 }
 
 .grid-cell:hover {
@@ -86,6 +91,8 @@
     max-width: 90%;
     max-height: 90%;
     object-fit: contain;
+    display: block;
+    margin: auto;
 }
 
 .selected-objects {
@@ -119,4 +126,38 @@
 
 .action-buttons button {
     margin-right: 5px;
+}
+
+/* Additional CSS for the remove button */
+.remove-icon-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+/* Highlight the selected icon */
+.icon-item.selected {
+    border: 2px solid #007bff;
+    background-color: #e9f7ff;
+}
+
+/* Ensure the grid cells have the correct size and layout */
+.grid-cell img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    display: block;
+    margin: auto;
 }

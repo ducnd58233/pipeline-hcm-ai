@@ -13,8 +13,9 @@
 
     <div class="icon-container">
         {% for category in categories %}
-        <div class="icon-item" hx-post="/select_category?category={{ category }}" hx-trigger="click"
-            hx-target="#selected-category" hx-swap="innerHTML">
+        <div class="icon-item {% if selected_category == category %}selected{% endif %}"
+            hx-post="/select_category?category={{ category }}" hx-trigger="click" hx-target="#selected-category"
+            hx-swap="innerHTML">
             <img src="/static/icons/{{ category }}.jpeg" alt="{{ category }}">
             <span>{{ category }}</span>
         </div>

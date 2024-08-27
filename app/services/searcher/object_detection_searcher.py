@@ -32,7 +32,7 @@ class ObjectDetectionSearcher(AbstractSearcher):
     async def search(self, query: Dict[str, Any], page: int, per_page: int) -> SearchResult:
         logger.info(f"Performing object detection search with query: {query}")
 
-        if query['state'] == 'disabled':
+        if not query:
             return SearchResult(frames=[], total=0, page=page, has_more=False)
 
         query_text = ' '.join([f"{await self.text_processor.preprocess_query(obj)} " for obj in query['objects']])
