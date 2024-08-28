@@ -1,75 +1,60 @@
-import os
-import pickle
-from scipy.sparse import load_npz
-from typing import Dict, List, Tuple
+from typing import List
 from app.log import logger
 from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.models import Score, SearchResult, Category, ObjectDetection
+from app.models import FrameMetadataModel, ObjectQuery, Score, SearchResult
 from app.utils.frame_data_manager import frame_data_manager
-from app.utils.search_processor import TextProcessor
-from config import Config
+from app.utils.query_vectorizer.object_detection_vectorizer import ObjectQueryVectorizer
+import numpy as np
 
 logger = logger.getChild(__name__)
 
 
 class ObjectDetectionSearcher(AbstractSearcher):
-    def __init__(self, text_processor: TextProcessor):
-        self.vectorizer = self.__load_vectorizer()
-        self.vectors = self.__load_vectors()
-        self.text_processor = text_processor
+    def __init__(self, vectorizer: ObjectQueryVectorizer):
+        self.vectorizer = vectorizer
 
-    def __load_vectorizer(self):
-        vectorizer_path = os.path.join(
-            Config.METADATA_DIR, 'bbox_vectorizer.pkl')
-        with open(vectorizer_path, 'rb') as f:
-            return pickle.load(f)
-
-    def __load_vectors(self):
-        vectors_path = os.path.join(
-            Config.METADATA_DIR, 'bbox_vectors.npz')
-        return load_npz(vectors_path)
-
-    async def search(self, query: Dict[Tuple[int, str], Category], page: int, per_page: int) -> SearchResult:
+    async def search(self, query: ObjectQuery, page: int, per_page: int) -> SearchResult:
         logger.info(f"Performing object detection search with query: {query}")
 
-        parsed_query = self.parse_query(query)
-        if not parsed_query:
-            return SearchResult(frames=[], total=0, page=page, has_more=False)
-
-        query_text = ' '.join(parsed_query)
-        logger.info(f"Processed query: {query_text}")
-
-        query_vector = self.vectorizer.transform([query_text])
-        similarities = self.vectors.dot(query_vector.T).toarray().flatten()
-
-        sorted_indices = similarities.argsort()[::-1]
+        similar_frames = await self.search_similar_frames(query, top_k=per_page*page)
 
         start = (page - 1) * per_page
         end = start + per_page
 
-        result_indices = sorted_indices[start:end]
-        result_similarities = similarities[result_indices]
-
-        frames = []
-        for idx, similarity in zip(result_indices, result_similarities):
-            frame = frame_data_manager.get_frame_by_index(idx)
+        result_frames: List[FrameMetadataModel] = []
+        for result in similar_frames[start:end]:
+            frame = frame_data_manager.get_frame_by_index(
+                result['frame_index'])
             if frame:
-                frame.score = Score(details={'object': float(similarity)})
-                frames.append(frame)
-
-        total_results = len(sorted_indices)
+                frame.score = Score(value=float(result['similarity']), details={
+                                    'object': float(result['similarity'])})
+                result_frames.append(frame)
 
         return SearchResult(
-            frames=frames,
-            total=total_results,
+            frames=result_frames,
+            total=len(similar_frames),
             page=page,
-            has_more=end < total_results
+            has_more=end < len(similar_frames)
         )
 
-    def parse_query(self, query: Dict[Tuple[int, str], Category]) -> List[str]:
-        result = []
+    async def search_similar_frames(self, query: ObjectQuery, top_k: int = 5) -> List[dict]:
+        query_vector = self.vectorizer.vectorize(query)
 
-        for (row, col), category in query.items():
-            result.append(f"{col}{row}{category.replace(' ', '')}")
+        # Calculate cosine similarity
+        similarities = self.vectorizer.vectors.dot(
+            query_vector.T).toarray().flatten()
 
-        return result
+        # Normalize similarities to [0, 1] range
+        similarities = (similarities - similarities.min()) / \
+            (similarities.max() - similarities.min() + 1e-10)
+
+        top_indices = similarities.argsort()[-top_k:][::-1]
+
+        results = []
+        for idx in top_indices:
+            results.append({
+                'frame_index': int(idx),
+                'similarity': float(similarities[idx])
+            })
+
+        return results

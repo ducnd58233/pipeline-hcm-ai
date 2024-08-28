@@ -1,3 +1,6 @@
+from typing import Dict
+
+
 class WeightNormalizer:
     @staticmethod
     def normalize(weights: Dict[str, float]) -> Dict[str, float]:

@@ -1,7 +1,7 @@
-
 from abc import ABC, abstractmethod
 from typing import List, Any
 from app.models import SearchResult
+
 
 class AbstractSearcher(ABC):
     @abstractmethod
