@@ -1,12 +1,10 @@
 from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.models import Score, SearchResult, FrameMetadataModel
+from app.models import Score, SearchResult, FrameMetadataModel, TextQuery
 from app.utils.frame_data_manager import frame_data_manager
 from app.utils.query_vectorizer.text_vectorizer import TextQueryVectorizer
 from app.utils.indexer import FaissIndexer
 from typing import List
 from app.log import logger
-
-logger = logger.getChild(__name__)
 
 
 class TextSearcher(AbstractSearcher):
@@ -14,10 +12,10 @@ class TextSearcher(AbstractSearcher):
         self.vectorizer = vectorizer
         self.indexer = indexer
 
-    async def search(self, query: str, page: int, per_page: int) -> SearchResult:
-        logger.info(f"Performing text search with query: {query}")
+    async def search(self, query: TextQuery, page: int, per_page: int) -> SearchResult:
+        logger.info(f"Performing text search with query: {query.query}")
 
-        query_structure = await self.vectorizer.parse_query(query)
+        query_structure = await self.vectorizer.parse_query(query.query)
 
         all_results = []
         for part in query_structure:
@@ -26,8 +24,7 @@ class TextSearcher(AbstractSearcher):
                 similar_frames = await self.search_similar_frames(part_query, top_k=per_page*page)
                 all_results.extend(similar_frames)
 
-        unique_results = {result['frame_index']
-            : result for result in all_results}
+        unique_results = {result['frame_index']: result for result in all_results}
         sorted_results = sorted(unique_results.values(
         ), key=lambda x: x['similarity'], reverse=True)
 

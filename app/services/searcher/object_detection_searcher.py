@@ -23,8 +23,7 @@ class ObjectDetectionSearcher(AbstractSearcher):
 
         result_frames: List[FrameMetadataModel] = []
         for result in similar_frames[start:end]:
-            frame = frame_data_manager.get_frame_by_index(
-                result['frame_index'])
+            frame = frame_data_manager.get_frame_by_index(result['frame_index'])
             if frame:
                 frame.score = Score(value=float(result['similarity']), details={
                                     'object': float(result['similarity'])})

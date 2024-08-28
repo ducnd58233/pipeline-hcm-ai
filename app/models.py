@@ -1,9 +1,6 @@
-# models.py
-
 from typing import Optional, Dict, List, Union, Tuple
 from pydantic import BaseModel, Field, validator
 from enum import Enum
-from datetime import datetime
 
 
 class QueryLogic(str, Enum):
@@ -31,39 +28,57 @@ class ObjectQuery(BaseModel):
         parsed_objects = {k: Category(v) for k, v in objects.items()}
         return cls(
             objects=parsed_objects,
-            logic=QueryLogic(logic),
+            logic=logic,
             max_objects=int(max_objects) if max_objects is not None else None
         )
 
-    @validator('max_objects')
-    def check_max_objects(cls, v):
-        if v is not None and v <= 0:
-            raise ValueError('max_objects must be a positive integer')
+class TextQuery(BaseModel):
+    query: str
+
+
+class Searcher(BaseModel):
+    query: Union[TextQuery, ObjectQuery]
+    weight: float = Field(..., ge=0.0, le=1.0)
+
+    @validator('weight')
+    def check_weight(cls, v):
+        if v < 0 or v > 1:
+            raise ValueError('Weight must be between 0 and 1')
         return v
 
 
+class QueriesStructure(BaseModel):
+    text_searcher: Optional[Searcher] = None
+    object_detection_searcher: Optional[Searcher] = None
+
+
 class SearchRequest(BaseModel):
-    text_query: Optional[str] = None
-    objects_query: ObjectQuery
-    logic: QueryLogic = QueryLogic.AND
-    max_objects: Optional[int] = None
+    queries: QueriesStructure
     page: int = Field(1, ge=1)
     per_page: int = Field(20, ge=1, le=100)
 
     @classmethod
     def from_form(cls, form_data: Dict[str, str]) -> 'SearchRequest':
+        text_query = form_data.get("text_query")
+        text_weight = float(form_data.get("text_weight", 0.5))
+
         objects = {}
         for key, value in form_data.items():
             if key.startswith("objects.") and value:
                 row, col = key.split(".")[1:]
                 objects[f"{row},{col}"] = Category(value)
 
+        object_weight = float(form_data.get("object_weight", 0.5))
+
+        queries = QueriesStructure(
+            text_searcher=Searcher(query=TextQuery(
+                query=text_query), weight=text_weight) if text_query else None,
+            object_detection_searcher=Searcher(query=ObjectQuery(
+                objects=objects), weight=object_weight) if objects else None
+        )
+
         return cls(
-            text_query=form_data.get("text_query"),
-            objects_query=ObjectQuery(objects=objects),
-            logic=QueryLogic(form_data.get("logic", "and")),
-            max_objects=int(form_data["max_objects"]) if form_data.get(
-                "max_objects") else None,
+            queries=queries,
             page=int(form_data.get("page", 1)),
             per_page=int(form_data.get("per_page", 20))
         )

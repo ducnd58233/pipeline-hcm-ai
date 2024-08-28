@@ -6,7 +6,6 @@ from app.services.csv_service import save_single_frame_to_csv
 from app.error import FrameNotFoundError
 from app.log import logger
 
-logger = logger.getChild(__name__)
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
