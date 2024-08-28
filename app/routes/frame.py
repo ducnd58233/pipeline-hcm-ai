@@ -41,6 +41,10 @@ async def get_selected_frames(request: Request):
     return templates.TemplateResponse("components/selected_frames.html", {"request": request, "frames": frames})
 
 
+@router.post("/submit_single_frame", response_class=HTMLResponse)
+async def submit_single_frame(request: Request, frame_id: str = Form(...)):
+    return templates.TemplateResponse("modals/confirm_submit.html", {"request": request, "frame_id": frame_id})
+
 @router.post("/confirm_submit_single", response_class=HTMLResponse)
 async def confirm_submit_single(request: Request, frame_id: str = Form(...)):
     try:
@@ -58,3 +62,17 @@ async def confirm_submit_single(request: Request, frame_id: str = Form(...)):
         logger.error(f"Error in confirm_submit_single: {str(e)}")
         raise HTTPException(
             status_code=500, detail="An error occurred while processing your submission")
+
+
+@router.get("/refresh_components", response_class=HTMLResponse)
+async def refresh_components(request: Request):
+    selected_frames = frame_data_manager.get_selected_frames()
+    return templates.TemplateResponse("components/refresh_all.html", {
+        "request": request,
+        "selected_frames": selected_frames
+    })
+
+
+@router.get("/close_modal", response_class=HTMLResponse)
+async def close_modal():
+    return ""

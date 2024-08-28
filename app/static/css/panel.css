@@ -1,32 +1,23 @@
-.sidebar {
-    width: 20vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    right: 0;
-    background-color: #f8f9fa;
-    padding: 20px;
-    overflow-y: auto;
-}
+
 
 .drag-drop-panel {
     border: 1px solid #ccc;
     padding: 10px;
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 .panel-controls {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 .icon-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 .icon-item {
@@ -34,8 +25,13 @@
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    width: 60px;
-    height: 60px;
+    width: 60px;  /* Increased width to accommodate larger icons */
+    margin-bottom: 10px;  /* Add some bottom margin for spacing */
+}
+
+.icon-item.selected {
+    border: 2px solid #007bff;
+    background-color: #e9f7ff;
 }
 
 .icon-item img {
@@ -48,12 +44,11 @@
     font-size: 0.7em;
     text-align: center;
     margin-top: 5px;
+    word-wrap: break-word;  /* Allow long words to break */
+    max-width: 100%;  /* Ensure text doesn't overflow */
 }
 
-.icon-item.selected {
-    border: 2px solid #007bff;
-    background-color: #e9f7ff;
-}
+/* Rest of the CSS remains the same */
 
 .grid-container {
     display: grid;
@@ -61,7 +56,7 @@
     gap: 1px;
     width: 100%;
     background-color: #f0f0f0;
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 .grid-cell {
@@ -111,7 +106,8 @@
     border-radius: 3px;
 }
 
-.max-objects, .action-buttons {
+.max-objects,
+.action-buttons {
     margin-top: 10px;
 }
 
@@ -145,19 +141,4 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-}
-
-/* Highlight the selected icon */
-.icon-item.selected {
-    border: 2px solid #007bff;
-    background-color: #e9f7ff;
-}
-
-/* Ensure the grid cells have the correct size and layout */
-.grid-cell img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    display: block;
-    margin: auto;
 }

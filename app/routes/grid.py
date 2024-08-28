@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Query, Request, HTTPException
+from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.utils.grid_manager import grid_manager
@@ -19,7 +19,7 @@ async def select_category(request: Request, category: str = Query(...)):
     try:
         current_selected_category = Category(category)
         logger.info(f"Selected category: {current_selected_category}")
-        return f'<input type="hidden" name="category" value="{current_selected_category.value}">{current_selected_category.value} selected'
+        return f'<input type="hidden" name="category" value="{current_selected_category.value}"><span style="color: red">{current_selected_category.value}</span> is selected'
     except ValueError:
         raise HTTPException(
             status_code=422, detail=f"Invalid category: {category}")
@@ -38,14 +38,24 @@ async def add_object_to_grid(request: Request, row: int = Query(...), col: str =
         grid_manager.add_object(row, col, current_selected_category)
         grid_state_values = {k: v.value for k,
                              v in grid_manager.get_state().items()}
-        response = templates.TemplateResponse("components/grid_cell.html", {
+        grid_cell_html = templates.TemplateResponse("components/grid_cell.html", {
             "request": request,
             "row": row,
             "col": col,
             "grid_state": grid_state_values
-        })
+        }).body.decode()
         current_selected_category = None
-        return response
+        
+        response_content = f"""
+        <div hx-swap-oob="true" id="grid-cell-{row}-{col}">
+            {grid_cell_html}
+        </div>
+        <div hx-swap-oob="true" id="selected-category-display">
+            No category selected
+        </div>
+        """
+
+        return Response(content=response_content, media_type="text/html")
     except Exception as e:
         logger.error(f"Error in add_object_to_grid: {str(e)}")
         raise HTTPException(status_code=422, detail=str(e))

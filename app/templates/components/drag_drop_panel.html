@@ -1,28 +1,20 @@
 <div id="drag-drop-panel" class="drag-drop-panel">
     <h3>Objects & colors of the scene</h3>
 
-    <!-- <div class="panel-controls">
-        <div class="toggle-container">
-            Panel State: {{ panel_state }}
-        </div>
-
-        <div class="logic-selector">
-            Panel Logic: AND OR
-        </div>
-    </div> -->
-
     <div class="icon-container">
         {% for category in categories %}
         <div class="icon-item {% if selected_category == category %}selected{% endif %}"
-            hx-post="/select_category?category={{ category }}" hx-trigger="click" hx-target="#selected-category"
+            hx-post="/select_category?category={{ category }}" hx-trigger="click" hx-target="#selected-category-display"
             hx-swap="innerHTML">
             <img src="/static/icons/{{ category }}.jpeg" alt="{{ category }}">
-            <span>{{ category }}</span>
+            {{ category }}
         </div>
         {% endfor %}
     </div>
 
-    <div id="selected-category">No category selected</div>
+    <div id="selected-category-display">
+        No category selected
+    </div>
 
     <div class="grid-container">
         <div class="grid-cell grid-header"></div>
@@ -33,7 +25,10 @@
         {% for row in range(7) %}
         <div class="grid-cell grid-header">{{ row }}</div>
         {% for col in 'abcdefg' %}
-        {% include 'components/grid_cell.html' %}
+        <div id="grid-cell-{{ row }}-{{ col }}" class="grid-cell"
+            hx-post="/add_object_to_grid?row={{ row }}&col={{ col }}" hx-trigger="click" hx-target="this">
+            {% include 'components/grid_cell.html' %}
+        </div>
         {% endfor %}
         {% endfor %}
     </div>
@@ -48,10 +43,6 @@
         <p>No objects on the grid.</p>
         {% endif %}
     </div>
-<!-- 
-    <div class="max-objects">
-        Max Objects:
-    </div> -->
 
     <div class="action-buttons">
     </div>
