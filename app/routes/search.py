@@ -29,32 +29,42 @@ searchers = {
     'object': object_detection_searcher
 }
 
-weights = {
-    'text': 0.5,
-    'object': 0.5
-}
-
-search_service = SearchService(searchers, weights)
+search_service = SearchService(searchers)
 
 
 @router.post("/search", response_class=HTMLResponse)
 @router.get("/search", response_class=HTMLResponse)
 async def search(
     request: Request,
-    query: str = "",
+    text_query: str = "",
+    text_weight: float = Query(0.5, ge=0.0, le=1.0),
+    object_weight: float = Query(0.5, ge=0.0, le=1.0),
     page: int = Query(1, ge=1),
-    per_page: int = Query(200, ge=1, le=1000)
+    per_page: int = Query(20, ge=1, le=100)
 ):
     try:
+        queries = {
+            'text': text_query,
+            'object': grid_manager.get_state(),
+        }
+
+        weights = {
+            'text': text_weight,
+            'object': object_weight,
+        }
+
         logger.info(
-            f"Searching for query: {query}, object_query: {grid_manager.get_state()}, page: {page}")
-        results = await search_service.search(query, grid_manager.get_state(), page=page, per_page=per_page)
+            f"Searching with queries: {queries}, weights: {weights}, page: {page}")
+        results = await search_service.search(queries, weights, page=page, per_page=per_page)
         logger.info(f"Found: {len(results.frames)} results")
 
         context = {
             "request": request,
             "results": results.frames if results else [],
-            "query": query,
+            "text_query": text_query,
+            "object_query": grid_manager.get_state(),
+            "text_weight": text_weight,
+            "object_weight": object_weight,
             "page": page,
             "per_page": per_page,
             "total": results.total if results else 0,
