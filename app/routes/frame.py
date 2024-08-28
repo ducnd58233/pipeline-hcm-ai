@@ -35,6 +35,15 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), score: float
             status_code=500, detail="An unexpected error occurred")
 
 
+@router.get("/get_frame_card/{frame_id}", response_class=HTMLResponse)
+async def get_frame_card(request: Request, frame_id: str):
+    frame = frame_data_manager.get_frame_by_id(frame_id)
+    if frame is None:
+        raise HTTPException(
+            status_code=404, detail=f"Frame not found: {frame_id}")
+    return templates.TemplateResponse("components/frame_card.html", {"request": request, "frame": frame})
+
+
 @router.get("/get_selected_frames", response_class=HTMLResponse)
 async def get_selected_frames(request: Request):
     frames = frame_data_manager.get_selected_frames()
@@ -44,6 +53,7 @@ async def get_selected_frames(request: Request):
 @router.post("/submit_single_frame", response_class=HTMLResponse)
 async def submit_single_frame(request: Request, frame_id: str = Form(...)):
     return templates.TemplateResponse("modals/confirm_submit.html", {"request": request, "frame_id": frame_id})
+
 
 @router.post("/confirm_submit_single", response_class=HTMLResponse)
 async def confirm_submit_single(request: Request, frame_id: str = Form(...)):
