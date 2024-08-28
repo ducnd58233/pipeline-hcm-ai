@@ -64,27 +64,3 @@ class TextProcessor:
     def tokenize_and_remove_stopwords(self, text):
         tokens = word_tokenize(text.lower())
         return [w for w in tokens if w not in self.stop_words or w.isdigit()]
-
-
-def parse_object_query(object_query: str) -> Dict[str, Any]:
-    if not object_query:
-        return {}
-
-    query_parts = object_query.split(',')
-    parsed_query = {}
-
-    for part in query_parts:
-        key_value = part.split(':')
-        if len(key_value) == 2:
-            key, value = key_value
-            key = key.strip()
-            value = value.strip()
-
-            try:
-                value = int(value)
-            except ValueError:
-                pass  # Keep it as a string if it's not an integer
-
-            parsed_query[key] = value
-
-    return parsed_query
