@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from app.utils.grid_manager import grid_manager
 from app.utils.frame_data_manager import frame_data_manager
 from app.services.csv_service import save_single_frame_to_csv
 from app.error import FrameNotFoundError
@@ -62,6 +63,7 @@ async def confirm_submit_single(request: Request, frame_id: str = Form(...)):
             raise FrameNotFoundError(f"Frame not found: {frame_id}")
         await save_single_frame_to_csv(frame)
         frame_data_manager.clear_all()
+        grid_manager.clear()
 
         response = templates.TemplateResponse(
             "index.html", {"request": request})
