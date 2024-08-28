@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List, Optional
-from app.models import FrameMetadataModel, KeyframeInfo, ObjectDetection
+from app.models import Category, FrameMetadataModel, KeyframeInfo, ObjectDetection
 from app.services.redis_service import redis_service
 from config import Config
 import faiss
@@ -25,8 +25,15 @@ class FrameDataManager:
 
         for idx, (frame_id, frame_info) in enumerate(data.items()):
             keyframe = KeyframeInfo(**frame_info['keyframe'])
-            detection = ObjectDetection(
-                **frame_info['detection']) if 'detection' in frame_info else None
+            detection = None
+            if 'detection' in frame_info:
+                filtered_objects = self.__filter_valid_categories(
+                    frame_info['detection']['objects'])
+                filtered_counts = self.__filter_valid_categories(
+                    frame_info['detection']['counts'])
+                detection = ObjectDetection(
+                    objects=filtered_objects, counts=filtered_counts)
+
             frame_metadata = FrameMetadataModel(
                 id=frame_id,
                 keyframe=keyframe,
@@ -37,6 +44,9 @@ class FrameDataManager:
             self.frame_data[frame_id] = frame_metadata
             self.frame_id_to_index[frame_id] = idx
             self.index_to_frame_id[idx] = frame_id
+
+    def __filter_valid_categories(self, data: Dict) -> Dict:
+        return {Category(k): v for k, v in data.items() if k in Category.__members__}
 
     def __load_faiss_index(self, faiss_index_path: str):
         return faiss.read_index(faiss_index_path)

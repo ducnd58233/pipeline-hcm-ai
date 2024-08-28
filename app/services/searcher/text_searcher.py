@@ -5,10 +5,10 @@ from app.utils.vectorizer import OpenClipVectorizer
 from app.utils.indexer import FaissIndexer
 from app.utils.frame_data_manager import frame_data_manager
 import numpy as np
-import logging
+from app.log import logger
 
 
-logger = logging.getLogger(__name__)
+logger = logger.getChild(__name__)
 
 class TextSearcher(AbstractSearcher):
     def __init__(self, vectorizer: OpenClipVectorizer, indexer: FaissIndexer, text_processor: TextProcessor):

@@ -1,10 +1,10 @@
 import asyncio
-import logging
 from typing import List, Dict, Any
-from app.models import SearchResult, FrameMetadataModel, Score
+from app.log import logger
+from app.models import SearchResult, FrameMetadataModel
 from app.services.searcher.abstract_searcher import AbstractSearcher
 
-logger = logging.getLogger(__name__)
+logger = logger.getChild(__name__)
 
 
 class SearchService:

@@ -2,10 +2,10 @@ import os
 import csv
 from app.models import FrameMetadataModel
 from config import Config
-import logging
+from app.log import logger
 import asyncio
 
-logger = logging.getLogger(__name__)
+logger = logger.getChild(__name__)
 
 
 async def save_single_frame_to_csv(frame: FrameMetadataModel):

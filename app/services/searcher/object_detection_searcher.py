@@ -1,15 +1,15 @@
 import os
 import pickle
 from scipy.sparse import load_npz
-from typing import Dict, Any
-import logging
+from typing import Dict, List, Tuple
+from app.log import logger
 from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.models import Score, SearchResult
+from app.models import Score, SearchResult, Category, ObjectDetection
 from app.utils.frame_data_manager import frame_data_manager
 from app.utils.search_processor import TextProcessor
 from config import Config
 
-logger = logging.getLogger(__name__)
+logger = logger.getChild(__name__)
 
 
 class ObjectDetectionSearcher(AbstractSearcher):
@@ -29,33 +29,20 @@ class ObjectDetectionSearcher(AbstractSearcher):
             Config.METADATA_DIR, 'bbox_vectors.npz')
         return load_npz(vectors_path)
 
-    async def search(self, query: Dict[str, Any], page: int, per_page: int) -> SearchResult:
+    async def search(self, query: Dict[Tuple[int, str], Category], page: int, per_page: int) -> SearchResult:
         logger.info(f"Performing object detection search with query: {query}")
 
-        if not query:
+        parsed_query = self.parse_query(query)
+        if not parsed_query:
             return SearchResult(frames=[], total=0, page=page, has_more=False)
 
-        query_text = ' '.join([f"{await self.text_processor.preprocess_query(obj)} " for obj in query['objects']])
+        query_text = ' '.join(parsed_query)
         logger.info(f"Processed query: {query_text}")
 
-        if query['max_objects']:
-            max_obj_parts = query['max_objects'].split()
-            for i in range(0, len(max_obj_parts), 2):
-                obj = max_obj_parts[i+1]
-                count = int(max_obj_parts[i])
-                query_text += f" {obj} " * count
-
         query_vector = self.vectorizer.transform([query_text])
-
         similarities = self.vectors.dot(query_vector.T).toarray().flatten()
 
-        if query['logic'] == 'and':
-            valid_indices = [i for i, sim in enumerate(
-                similarities) if sim >= len(query['objects'])]
-            sorted_indices = sorted(
-                valid_indices, key=lambda i: similarities[i], reverse=True)
-        else:
-            sorted_indices = similarities.argsort()[::-1]
+        sorted_indices = similarities.argsort()[::-1]
 
         start = (page - 1) * per_page
         end = start + per_page
@@ -78,3 +65,11 @@ class ObjectDetectionSearcher(AbstractSearcher):
             page=page,
             has_more=end < total_results
         )
+
+    def parse_query(self, query: Dict[Tuple[int, str], Category]) -> List[str]:
+        result = []
+
+        for (row, col), category in query.items():
+            result.append(f"{col}{row}{category.replace(' ', '')}")
+
+        return result
