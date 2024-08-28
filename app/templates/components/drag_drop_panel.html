@@ -1,15 +1,7 @@
 <div id="drag-drop-panel" class="drag-drop-panel">
     <h3>Objects & colors of the scene</h3>
 
-    <div class="icon-container">
-        {% for category in categories %}
-        <div class="icon-item {% if selected_category == category %}selected{% endif %}"
-            hx-post="/select_category?category={{ category }}" hx-trigger="click" hx-target="#selected-category-display"
-            hx-swap="innerHTML">
-            <img src="/static/icons/{{ category }}.jpeg" alt="{{ category }}">
-            {{ category }}
-        </div>
-        {% endfor %}
+    <div hx-get="/paginated_icon_grid" hx-trigger="load" hx-target="this">
     </div>
 
     <div id="selected-category-display">

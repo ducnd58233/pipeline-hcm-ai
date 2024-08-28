@@ -1,55 +1,11 @@
-
-
+/* Panel Styles */
 .drag-drop-panel {
     border: 1px solid #ccc;
     padding: 10px;
     margin-top: 20px;
 }
 
-.panel-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.icon-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.icon-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
-    width: 60px;  /* Increased width to accommodate larger icons */
-    margin-bottom: 10px;  /* Add some bottom margin for spacing */
-}
-
-.icon-item.selected {
-    border: 2px solid #007bff;
-    background-color: #e9f7ff;
-}
-
-.icon-item img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-}
-
-.icon-item span {
-    font-size: 0.7em;
-    text-align: center;
-    margin-top: 5px;
-    word-wrap: break-word;  /* Allow long words to break */
-    max-width: 100%;  /* Ensure text doesn't overflow */
-}
-
-/* Rest of the CSS remains the same */
-
+/* Grid Styles */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -69,6 +25,7 @@
     aspect-ratio: 1 / 1;
     transition: background-color 0.3s;
     overflow: hidden;
+    position: relative;
 }
 
 .grid-cell:hover {
@@ -82,49 +39,22 @@
     cursor: default;
 }
 
-.grid-cell img {
-    max-width: 90%;
-    max-height: 90%;
+.grid-cell i {
+    font-size: 90%;
     object-fit: contain;
     display: block;
     margin: auto;
 }
 
-.selected-objects {
-    margin-top: 10px;
-    min-height: 50px;
-    border: 1px dashed #999;
-    padding: 5px;
-    font-size: 0.8em;
-}
-
-.selected-object {
-    display: inline-block;
-    margin: 2px;
-    padding: 2px 5px;
-    background-color: #f0f0f0;
-    border-radius: 3px;
-}
-
-.max-objects,
-.action-buttons {
-    margin-top: 10px;
-}
-
-.max-objects label {
-    font-size: 0.8em;
-}
-
-.max-objects input {
+.cell-content {
+    position: relative;
     width: 100%;
-    margin-top: 5px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.action-buttons button {
-    margin-right: 5px;
-}
-
-/* Additional CSS for the remove button */
 .remove-icon-btn {
     position: absolute;
     top: 2px;
@@ -141,4 +71,41 @@
     align-items: center;
     justify-content: center;
     padding: 0;
+    z-index: 1;
+}
+
+/* Selected Objects Styles */
+.selected-objects {
+    margin-top: 10px;
+    min-height: 50px;
+    border: 1px dashed #999;
+    padding: 5px;
+    font-size: 0.8em;
+}
+
+.selected-object {
+    display: inline-block;
+    margin: 2px;
+    padding: 2px 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+}
+
+/* Max Objects and Action Buttons Styles */
+.max-objects,
+.action-buttons {
+    margin-top: 10px;
+}
+
+.max-objects label {
+    font-size: 0.8em;
+}
+
+.max-objects input {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.action-buttons button {
+    margin-right: 5px;
 }

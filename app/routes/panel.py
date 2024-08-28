@@ -1,12 +1,16 @@
+from math import ceil
 from fastapi import APIRouter, HTTPException, Request, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from app.utils.icon_mapper import icon_map
 from app.utils.grid_manager import grid_manager
 from app.log import logger
 from app.models import Category
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+ITEMS_PER_PAGE = 20
 
 
 @router.post("/update_panel_logic", response_class=HTMLResponse)
@@ -29,14 +33,35 @@ async def update_max_objects(request: Request, max_objects: str = Query(...)):
 
 @router.get("/drag_drop_panel", response_class=HTMLResponse)
 async def get_drag_drop_panel(request: Request):
-    categories = [category.value for category in Category]
+    categories = list(Category)
     grid_state_values = {k: v.value for k,
                          v in grid_manager.get_state().items()}
     return templates.TemplateResponse("components/drag_drop_panel.html", {
         "request": request,
         "categories": categories,
-        "panel_state": "enabled",  # You might want to make this dynamic
+        "panel_state": "enabled",
+        "icon_map": icon_map,
         "panel_logic": grid_manager.get_panel_logic(),
         "grid_state": grid_state_values,
         "max_objects": grid_manager.get_max_objects()
+    })
+
+
+@router.get("/paginated_icon_grid", response_class=HTMLResponse)
+async def get_paginated_icon_grid(request: Request, page: int = Query(1, ge=1)):
+    categories = list(Category)
+    total_categories = len(categories)
+    total_pages = ceil(total_categories / ITEMS_PER_PAGE)
+
+    start_index = (page - 1) * ITEMS_PER_PAGE
+    end_index = start_index + ITEMS_PER_PAGE
+    paginated_categories = categories[start_index:end_index]
+
+    return templates.TemplateResponse("components/paginated_icon_grid.html", {
+        "request": request,
+        "categories": paginated_categories,
+        "icon_map": icon_map,
+        "page": page,
+        "total_pages": total_pages,
+        "selected_category": None
     })

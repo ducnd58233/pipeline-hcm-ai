@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from app.utils.icon_mapper import icon_map
 from app.utils.grid_manager import grid_manager
 from app.log import logger
 from app.models import Category
@@ -41,7 +42,8 @@ async def add_object_to_grid(request: Request, row: int = Query(...), col: str =
             "request": request,
             "row": row,
             "col": col,
-            "grid_state": grid_state_values
+            "grid_state": grid_state_values,
+            "icon_map": icon_map,
         }).body.decode()
         current_selected_category = None
         
