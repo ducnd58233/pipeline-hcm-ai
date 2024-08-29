@@ -7,10 +7,7 @@ import spacy
 from spacy.cli import download
 from googletrans import Translator
 import asyncio
-import logging
-
-logger = logging.getLogger(__name__)
-
+from app.log import logger
 nltk.download('punkt', quiet=True)
 nltk.download('stopwords', quiet=True)
 
@@ -31,7 +28,7 @@ class TextProcessor:
     async def preprocess_query(self, query):
         query = query.strip()
         detected_lang = await asyncio.to_thread(self.translator.detect, query)
-        logger.info(f"Detected language: {detected_lang.lang}")
+        logger.debug(f"Detected language: {detected_lang.lang}")
 
         if detected_lang.lang != 'en':
             translated = await asyncio.to_thread(self.translator.translate, query, dest='en')

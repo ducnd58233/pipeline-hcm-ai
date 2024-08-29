@@ -43,7 +43,7 @@ class FrameDataManager:
                 frame_id, frame_info, object_detection_data)
             self._add_frame_to_data(idx, frame_id, frame_metadata)
 
-        logger.info(f"Processed {len(self.frame_data)} frames")
+        logger.debug(f"Processed {len(self.frame_data)} frames")
 
     def _load_json_data(self) -> Tuple[Dict, Dict]:
         keyframes_path = os.path.join(
@@ -132,7 +132,7 @@ class FrameDataManager:
             redis_service.zadd(score_key, {frame_id: score})
             frame.selected = True
             frame.final_score = score
-
+        logger.debug(f'Toggled frame: {frame}')
         return frame.selected
 
     def get_selected_frames(self) -> List[FrameMetadataModel]:

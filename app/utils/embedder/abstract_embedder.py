@@ -4,8 +4,6 @@ from abc import ABC, abstractmethod
 from sklearn.preprocessing import normalize
 from app.log import logger
 
-logger = logger.getChild(__name__)
-
 
 class AbstractTextEmbedder(ABC):
     @abstractmethod
