@@ -1,0 +1,13 @@
+<h4>Grid State:</h4>
+{% if grid_state %}
+<ul>
+    {% for position, category in grid_state.items() %}
+    <li>
+        <i class="{{ icon_map[category] }}"></i>
+        {{ category.replace('_', ' ').title() }} at position: Row {{ position[0] }}, Col {{ position[1] }}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No objects on the grid.</p>
+{% endif %}

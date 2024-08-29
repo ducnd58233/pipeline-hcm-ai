@@ -38,6 +38,7 @@ async def add_object_to_grid(request: Request, row: int = Query(...), col: str =
         grid_manager.add_object(row, col, current_selected_category)
         grid_state_values = {k: v.value for k,
                              v in grid_manager.get_state().items()}
+
         grid_cell_html = templates.TemplateResponse("components/grid_cell.html", {
             "request": request,
             "row": row,
@@ -45,11 +46,21 @@ async def add_object_to_grid(request: Request, row: int = Query(...), col: str =
             "grid_state": grid_state_values,
             "icon_map": icon_map,
         }).body.decode()
+
+        grid_state_html = templates.TemplateResponse("components/grid_state_display.html", {
+            "request": request,
+            "grid_state": grid_state_values,
+            "icon_map": icon_map,
+        }).body.decode()
+
         current_selected_category = None
-        
+
         response_content = f"""
         <div hx-swap-oob="true" id="grid-cell-{row}-{col}">
             {grid_cell_html}
+        </div>
+        <div hx-swap-oob="true" id="grid-state-display">
+            {grid_state_html}
         </div>
         <div hx-swap-oob="true" id="selected-category-display">
             No category selected
@@ -68,9 +79,62 @@ async def remove_object_from_grid(request: Request, row: int = Query(...), col: 
     grid_manager.remove_object(row, col)
     grid_state_values = {k: v.value for k,
                          v in grid_manager.get_state().items()}
-    return templates.TemplateResponse("components/grid_cell.html", {
+
+    grid_cell_html = templates.TemplateResponse("components/grid_cell.html", {
         "request": request,
         "row": row,
         "col": col,
-        "grid_state": grid_state_values
-    })
+        "grid_state": grid_state_values,
+        "icon_map": icon_map,
+    }).body.decode()
+
+    grid_state_html = templates.TemplateResponse("components/grid_state_display.html", {
+        "request": request,
+        "grid_state": grid_state_values,
+        "icon_map": icon_map,
+    }).body.decode()
+
+    response_content = f"""
+    <div hx-swap-oob="true" id="grid-cell-{row}-{col}">
+        {grid_cell_html}
+    </div>
+    <div hx-swap-oob="true" id="grid-state-display">
+        {grid_state_html}
+    </div>
+    """
+
+    return Response(content=response_content, media_type="text/html")
+
+
+@router.post("/clear_all_objects", response_class=HTMLResponse)
+async def clear_all_objects(request: Request):
+    logger.info("Clearing all objects from grid")
+    grid_manager.clear()
+    grid_state_values = {}
+
+    grid_cells_html = ""
+    for row in range(7):
+        for col in 'abcdefg':
+            grid_cell_html = templates.TemplateResponse("components/grid_cell.html", {
+                "request": request,
+                "row": row,
+                "col": col,
+                "grid_state": grid_state_values,
+                "icon_map": icon_map,
+            }).body.decode()
+            grid_cells_html += f'<div hx-swap-oob="true" id="grid-cell-{row}-{col}">{grid_cell_html}</div>'
+
+    grid_state_html = templates.TemplateResponse("components/grid_state_display.html", {
+        "request": request,
+        "grid_state": grid_state_values,
+        "icon_map": icon_map,
+    }).body.decode()
+
+    response_content = f"""
+    {grid_cells_html}
+    <div hx-swap-oob="true" id="grid-state-display">
+        {grid_state_html}
+    </div>
+    """
+
+    return Response(content=response_content, media_type="text/html")
