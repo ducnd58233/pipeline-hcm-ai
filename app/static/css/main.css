@@ -3,6 +3,7 @@
 @import "button.css";
 @import "panel.css";
 @import "icon_grid.css";
+@import "icon_search_bar.css";
 
 body {
     font-family: Arial, sans-serif;

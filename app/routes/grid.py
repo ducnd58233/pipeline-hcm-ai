@@ -3,7 +3,7 @@ from fastapi import APIRouter, Query, Request, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.utils.icon_mapper import icon_map
-from app.utils.grid_manager import grid_manager
+from app.utils.data_manager.grid_manager import grid_manager
 from app.log import logger
 from app.models import Category
 

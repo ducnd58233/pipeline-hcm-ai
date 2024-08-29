@@ -3,15 +3,38 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.utils.icon_mapper import icon_map
-from app.utils.grid_manager import grid_manager
+from app.utils.data_manager.grid_manager import grid_manager
 from app.log import logger
 from app.models import Category
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-ITEMS_PER_PAGE = 20
+ITEMS_PER_PAGE = 10
 
+
+@router.get("/search_icons", response_class=HTMLResponse)
+async def search_icons(request: Request, query: str = Query(None)):
+    if query:
+        matching_categories = [
+            category for category in Category
+            if query.lower() in category.name.lower()
+        ]
+    else:
+        matching_categories = []
+
+    return templates.TemplateResponse("components/icon_suggestions.html", {
+        "request": request,
+        "categories": matching_categories,
+        "icon_map": icon_map
+    })
+
+
+@router.get("/icon_search_bar", response_class=HTMLResponse)
+async def get_icon_search_bar(request: Request):
+    return templates.TemplateResponse("components/icon_search_bar.html", {
+        "request": request
+    })
 
 @router.post("/update_panel_logic", response_class=HTMLResponse)
 async def update_panel_logic(request: Request, panel_logic: str = Query(...)):

@@ -14,7 +14,7 @@ from app.utils.indexer import FaissIndexer
 from app.utils.query_vectorizer.object_detection_vectorizer import ObjectQueryVectorizer
 from app.utils.query_vectorizer.text_vectorizer import TextQueryVectorizer
 from app.utils.search_processor import TextProcessor
-from app.utils.grid_manager import grid_manager
+from app.utils.data_manager.grid_manager import grid_manager
 from config import Config
 
 router = APIRouter()
