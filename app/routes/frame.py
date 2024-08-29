@@ -17,15 +17,30 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), score: float
         logger.info(
             f"Received toggle request for frame_id: {frame_id}, score: {score}")
         frame_data_manager.toggle_frame_selection(frame_id, score)
-        frame_data = frame_data_manager.get_frame_by_id(frame_id)
 
-        if frame_data is None:
-            raise FrameNotFoundError(f"Frame not found: {frame_id}")
+        frame = frame_data_manager.get_frame_by_id(frame_id)
+        selected_frames = frame_data_manager.get_selected_frames()
 
-        response = templates.TemplateResponse(
-            "components/frame_card.html", {"request": request, "frame": frame_data})
-        response.headers["HX-Trigger"] = "frame-toggled"
-        return response
+        frame_card_html = templates.TemplateResponse(
+            "components/frame_card.html",
+            {"request": request, "frame": frame}
+        ).body.decode()
+
+        selected_frames_html = templates.TemplateResponse(
+            "components/selected_frames.html",
+            {"request": request, "frames": selected_frames}
+        ).body.decode()
+
+        search_results_frame_card_html = templates.TemplateResponse(
+            "components/frame_card.html",
+            {"request": request, "frame": frame}
+        ).body.decode()
+
+        return f"""
+        <div hx-swap-oob="true" id="frame-{frame_id}">{frame_card_html}</div>
+        <div hx-swap-oob="true" id="selected-frames">{selected_frames_html}</div>
+        <div hx-swap-oob="true" id="frame-{frame_id}-search-result">{search_results_frame_card_html}</div>
+        """
     except FrameNotFoundError as e:
         logger.error(f"Frame not found: {str(e)}")
         raise HTTPException(status_code=404, detail=str(e))
