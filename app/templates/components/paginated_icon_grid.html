@@ -1,0 +1,28 @@
+<div id="paginated-icon-grid">
+    <div class="icon-grid">
+        {% for category in categories %}
+        <div class="icon-item {% if selected_category == category.value %}selected{% endif %}"
+            hx-post="/select_category?category={{ category.value }}" hx-trigger="click"
+            hx-target="#selected-category-display" hx-swap="innerHTML">
+            <i class="{{ icon_map[category.value] }}"></i>
+            <span>{{ category.name.replace('_', ' ').title() }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination-controls">
+        {% if page > 1 %}
+        <button hx-get="/paginated_icon_grid?page={{ page - 1 }}" hx-target="#paginated-icon-grid" hx-swap="outerHTML">
+            Previous
+        </button>
+        {% endif %}
+
+        <span>Page {{ page }} of {{ total_pages }}</span>
+
+        {% if page < total_pages %} <button hx-get="/paginated_icon_grid?page={{ page + 1 }}"
+            hx-target="#paginated-icon-grid" hx-swap="outerHTML">
+            Next
+            </button>
+            {% endif %}
+    </div>
+</div>

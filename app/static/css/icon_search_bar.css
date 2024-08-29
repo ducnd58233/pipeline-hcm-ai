@@ -1,0 +1,65 @@
+#icon-search-container {
+  position: relative;
+  width: auto;
+  margin-bottom: 20px;
+}
+
+#icon-search-container input {
+  width: 80%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#search-indicator {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #666;
+  display: none;
+}
+
+#search-indicator.htmx-request {
+  display: inline;
+}
+
+#icon-suggestions {
+  margin-top: 10px;
+}
+
+.icon-suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.icon-suggestion-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: center;
+}
+
+.icon-suggestion-button:hover {
+  background-color: #e0e0e0;
+}
+
+.icon-suggestion-button i {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.icon-suggestion-button span {
+  font-size: 12px;
+  word-break: break-word;
+}

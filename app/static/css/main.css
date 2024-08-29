@@ -1,6 +1,9 @@
-@import 'frame_card.css';
-@import 'modal.css';
-@import 'button.css';
+@import "frame_card.css";
+@import "modal.css";
+@import "button.css";
+@import "panel.css";
+@import "icon_grid.css";
+@import "icon_search_bar.css";
 
 body {
     font-family: Arial, sans-serif;
@@ -11,4 +14,70 @@ body {
     padding: 20px;
 }
 
+.main-content {
+    flex: 1;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
 
+.sidebar {
+    width: 100%;
+    background-color: #f8f9fa;
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+    body {
+        flex-direction: row;
+    }
+
+    .main-content {
+        width: 70%;
+    }
+
+    .sidebar {
+        width: 30%;
+        height: 100vh;
+        padding: 20px;
+        position: fixed;
+        top: 0;
+        right: 0;
+        overflow-y: auto;
+    }
+}
+
+@media (min-width: 1200px) {
+    .main-content {
+        width: 80%;
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 20%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .frame-card {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+}

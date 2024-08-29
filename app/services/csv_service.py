@@ -2,10 +2,10 @@ import os
 import csv
 from app.models import FrameMetadataModel
 from config import Config
-import logging
+from app.log import logger
 import asyncio
 
-logger = logging.getLogger(__name__)
+logger = logger.getChild(__name__)
 
 
 async def save_single_frame_to_csv(frame: FrameMetadataModel):
@@ -20,4 +20,5 @@ def _write_single_frame_csv(frame: FrameMetadataModel):
         writer = csv.writer(csvfile)
         if not file_exists:
             writer.writerow(['frame_id', 'frame_path', 'score'])
-        writer.writerow([frame.id, frame.frame_path, frame.score])
+        writer.writerow(
+            [frame.id, f"keyframes/{frame.keyframe.frame_path}", frame.final_score])

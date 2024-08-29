@@ -1,0 +1,12 @@
+<div class="grid-cell" hx-post="/add_object_to_grid?row={{ row }}&col={{ col }}" hx-trigger="click" hx-target="this"
+    hx-swap="outerHTML">
+    {% if grid_state.get((row, col)) %}
+    <div class="cell-content">
+        <button class="remove-icon-btn" hx-post="/remove_object_from_grid?row={{ row }}&col={{ col }}"
+            hx-target="closest .grid-cell" hx-swap="outerHTML" hx-trigger="click" onclick="event.stopPropagation();">
+            x
+        </button>
+        <i class="{{ icon_map[grid_state[(row, col)]] }}"></i>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,13 @@
+{% if categories %}
+<div class="icon-suggestion-grid">
+    {% for category in categories %}
+    <button class="icon-suggestion-button" hx-post="/select_category?category={{ category.value }}" hx-trigger="click"
+        hx-target="#selected-category-display">
+        <i class="{{ icon_map.get(category.name.lower().replace(' ', '_'), 'fas fa-question') }}"></i>
+        <span>{{ category.name.replace('_', ' ').title() }}</span>
+    </button>
+    {% endfor %}
+</div>
+{% else %}
+<p>No matching icons found.</p>
+{% endif %}

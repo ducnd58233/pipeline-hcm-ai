@@ -5,7 +5,6 @@ import pytz
 
 class TimezoneFormatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
-        # Đặt múi giờ mặc định là Hồ Chí Minh
         timezone = pytz.timezone('Asia/Ho_Chi_Minh')
         conversion = datetime.fromtimestamp(record.created, timezone)
         if datefmt:
@@ -37,7 +36,7 @@ logging_config = {
     },
     "root": {
         "handlers": ["console", "file"],
-        "level": "INFO",
+        "level": "DEBUG",
     },
 }
 
@@ -46,3 +45,9 @@ def set_timezone(timezone_str: str):
     """Set the timezone for logging."""
     TimezoneFormatter.timezone = pytz.timezone(timezone_str)
     logging.info(f"Logging timezone set to: {TimezoneFormatter.timezone}")
+
+
+logging.config.dictConfig(logging_config)
+logger = logging.getLogger(__name__)
+
+set_timezone('Asia/Ho_Chi_Minh')

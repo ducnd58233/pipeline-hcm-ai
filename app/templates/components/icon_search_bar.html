@@ -1,0 +1,8 @@
+<div id="icon-search-container">
+    <input type="text" name="query" placeholder="Search for icons..." hx-get="/search_icons"
+        hx-trigger="keyup changed delay:500ms" hx-target="#icon-suggestions" hx-indicator="#search-indicator">
+    <div id="search-indicator" class="htmx-indicator">
+        Searching...
+    </div>
+    <div id="icon-suggestions"></div>
+</div>

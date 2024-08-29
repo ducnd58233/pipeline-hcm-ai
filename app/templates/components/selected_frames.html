@@ -1,4 +1,4 @@
-<div id="selected-frames">
+<div id="selected-frames" class="{% if not frames %}empty{% endif %}">
     {% if frames %}
     <div class="frame-container">
         {% for frame in frames %}

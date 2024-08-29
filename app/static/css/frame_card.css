@@ -1,65 +1,88 @@
 .frame-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
-    width: 100%;
+    padding: 20px;
 }
-
 
 .frame-card {
-    flex: 0 0 auto;
-    width: 250px;
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
-    width: 250px;
-    height: 400px;
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
-
-.frame-card.selected {
-    background-color: #e6f3ff;
-    border-color: #3498db;
+    justify-content: space-between;
+    background-color: #ffffff;
 }
 
 .frame-image-container {
     width: 100%;
-    height: 200px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding-top: 75%; /* 4:3 Aspect Ratio */
+    position: relative;
     overflow: hidden;
 }
 
 .frame-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
 .frame-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    padding: 10px;
 }
 
-.placeholder-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f0f0;
-    color: #666;
+.frame-card.selected {
+    background-color: #df1710;
+    border-color: #0faeb9;
+}
+/* Toggle box styles */
+.toggle-container {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
 }
 
-.submit-button {
-    margin-top: auto;
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.toggle-input:checked + .toggle-slider {
+    background-color: #2196F3;
+}
+
+.toggle-input:checked + .toggle-slider:before {
+    transform: translateX(26px);
 }

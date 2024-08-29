@@ -29,12 +29,17 @@ source venv/bin/activate
 ```
 pip install git+https://github.com/openai/CLIP.git
 pip install --default-timeout=1000 -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Run 
 ```
 cp .env.example .env
 python run.py
+```
+Or
+```
+uvicorn app.main:app --host 127.0.0.1 --port 5001 --reload
 ```
 
 URL: http://127.0.0.1:5001/

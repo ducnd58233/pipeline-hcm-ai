@@ -1,0 +1,111 @@
+/* Panel Styles */
+.drag-drop-panel {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+/* Grid Styles */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    width: 100%;
+    background-color: #f0f0f0;
+    margin-top: 20px;
+}
+
+.grid-cell {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    aspect-ratio: 1 / 1;
+    transition: background-color 0.3s;
+    overflow: hidden;
+    position: relative;
+}
+
+.grid-cell:hover {
+    background-color: #e0e0e0;
+}
+
+.grid-header {
+    font-weight: bold;
+    background-color: #ddd;
+    font-size: 0.8em;
+    cursor: default;
+}
+
+.grid-cell i {
+    font-size: 90%;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+}
+
+.cell-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-icon-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 1;
+}
+
+/* Selected Objects Styles */
+.selected-objects {
+    margin-top: 10px;
+    min-height: 50px;
+    border: 1px dashed #999;
+    padding: 5px;
+    font-size: 0.8em;
+}
+
+.selected-object {
+    display: inline-block;
+    margin: 2px;
+    padding: 2px 5px;
+    background-color: #f0f0f0;
+    border-radius: 3px;
+}
+
+/* Max Objects and Action Buttons Styles */
+.max-objects,
+.action-buttons {
+    margin-top: 10px;
+}
+
+.max-objects label {
+    font-size: 0.8em;
+}
+
+.max-objects input {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.action-buttons button {
+    margin-right: 5px;
+}

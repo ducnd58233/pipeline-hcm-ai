@@ -1,12 +1,6 @@
-<div id="search-results">
+<div id="search-results" class="{% if not results %}empty{% endif %}">
     {% if results %}
-    <p>Found {{ total_results }} results for "{{ query }}"</p>
-    {% include 'components/pagination.html' %}
-    <div class="frame-container">
-        {% for frame in results %}
-        {% include 'components/frame_card.html' %}
-        {% endfor %}
-    </div>
+    {% include 'components/frame_cards.html' %}
     {% else %}
     <p>No results found for "{{ query }}"</p>
     {% endif %}

@@ -1,0 +1,46 @@
+<div id="drag-drop-panel" class="drag-drop-panel">
+    <h3>Objects & colors of the scene</h3>
+
+    <div hx-get="/icon_search_bar" hx-trigger="load" hx-target="this"></div>
+
+    <div hx-get="/paginated_icon_grid" hx-trigger="load" hx-target="this">
+    </div>
+
+    <div id="selected-category-display">
+        No category selected
+    </div>
+
+    <div class="grid-container">
+        <div class="grid-cell grid-header"></div>
+        {% for col in 'abcdefg' %}
+        <div class="grid-cell grid-header">{{ col }}</div>
+        {% endfor %}
+
+        {% for row in range(7) %}
+        <div class="grid-cell grid-header">{{ row }}</div>
+        {% for col in 'abcdefg' %}
+        <div id="grid-cell-{{ row }}-{{ col }}" class="grid-cell"
+            hx-post="/add_object_to_grid?row={{ row }}&col={{ col }}" hx-trigger="click" hx-target="this">
+            {% include 'components/grid_cell.html' %}
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div id="grid-state-display">
+        <h4>Grid State:</h4>
+        {% if grid_state %}
+        {% for position, category in grid_state.items() %}
+        <p>Object: {{ category }} at position: Row {{ position[0] }}, Col {{ position[1] }}</p>
+        {% endfor %}
+        {% else %}
+        <p>No objects on the grid.</p>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons">
+        <button id="clear-all-button" hx-post="/clear_all_objects" hx-target="#drag-drop-panel" hx-swap="none">
+            Clear All Icons
+        </button>
+    </div>
+</div>

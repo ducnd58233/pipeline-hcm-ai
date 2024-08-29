@@ -1,27 +1,58 @@
-.submit-button, .confirm-button, .cancel-button {
+.button {
     padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .submit-button {
     background-color: #3498db;
     color: white;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.submit-button:hover {
+    background-color: #2980b9;
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.5);
 }
 
 .confirm-button {
     background-color: #2ecc71;
     color: white;
+    box-shadow: 0 2px 4px rgba(46, 204, 113, 0.3);
+}
+
+.confirm-button:hover {
+    background-color: #27ae60;
+    box-shadow: 0 4px 8px rgba(46, 204, 113, 0.5);
 }
 
 .cancel-button {
     background-color: #e74c3c;
     color: white;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
 }
 
-.submit-button:hover, .confirm-button:hover, .cancel-button:hover {
-    opacity: 0.8;
+.cancel-button:hover {
+    background-color: #c0392b;
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.5);
+}
+
+.button:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .button {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
 }
