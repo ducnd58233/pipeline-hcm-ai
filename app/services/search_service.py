@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, List
+from typing import List
 from app.models import SearchResult, FrameMetadataModel, QueriesStructure
 from app.services.searcher.abstract_searcher import AbstractSearcher
 from app.services.fusion.abstract_fusion import AbstractFusion

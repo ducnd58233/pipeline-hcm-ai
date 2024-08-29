@@ -5,7 +5,6 @@ from app.utils.embedder.abstract_embedder import AbstractTextEmbedder
 from app.log import logger
 import numpy as np
 
-logger = logger.getChild(__name__)
 
 class TextQueryVectorizer(AbstractQueryVectorizer):
     def __init__(self, embedder: AbstractTextEmbedder, text_processor: TextProcessor):
@@ -21,4 +20,4 @@ class TextQueryVectorizer(AbstractQueryVectorizer):
         return await self.text_processor.preprocess_query(query)
 
     async def parse_query(self, query: str) -> List[List[str]]:
-        return await self.text_processor.parse_long_query(query)
+        return await self.text_processor.parse_query(query)

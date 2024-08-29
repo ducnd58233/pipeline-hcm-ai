@@ -21,6 +21,7 @@ except OSError:
     download('en_core_web_sm')
     nlp = spacy.load('en_core_web_sm')
 
+
 class TextProcessor:
     def __init__(self):
         self.nlp = nlp
@@ -38,28 +39,32 @@ class TextProcessor:
 
         return query.lower()
 
-    async def parse_long_query(self, query):
+    async def parse_query(self, query):
         query = await self.preprocess_query(query)
         doc = self.nlp(query)
-
         query_structure = []
         current_chunk = []
 
-        for token in doc:
-            if token.text.lower() in ["and", "or"]:
-                if current_chunk:
-                    query_structure.append(current_chunk)
-                    current_chunk = []
-                query_structure.append(token.text.lower())
-            else:
-                current_chunk.append(token.text)
+        for chunk in doc.noun_chunks:
+            current_chunk.append(chunk.text)
+            for token in doc:
+                if token.text.lower() in ["and", "or"]:
+                    if current_chunk:
+                        query_structure.append(current_chunk)
+                        current_chunk = []
+                    query_structure.append(token.text.lower())
+                elif token.pos in ["NOUN", "PROPN", "ADJ", "VERB", "NUM"]:
+                    if not current_chunk or (current_chunk and token.dep != "conj"):
+                        current_chunk.append(token.text)
+                    else:
+                        if current_chunk:
+                            query_structure.append(current_chunk)
+                        current_chunk = [token.text]
 
-        if current_chunk:
-            query_structure.append(current_chunk)
+            if current_chunk:
+                query_structure.append(current_chunk)
 
-        query_structure.append(doc.text.split())
-
-        return query_structure
+            return query_structure
 
     def tokenize_and_remove_stopwords(self, text):
         tokens = word_tokenize(text.lower())

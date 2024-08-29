@@ -1,55 +1,89 @@
+import csv
 import json
-from typing import Dict, List, Optional
-from app.models import Category, FrameMetadataModel, KeyframeInfo, ObjectDetection
+import os
+from typing import Dict, List, Optional, Tuple
+from app.models import FrameMetadataModel, KeyframeInfo
 from app.services.redis_service import redis_service
+from .visual_encoding_manager import VisualEncodingManager
 from config import Config
 import faiss
-import logging
+from app.log import logger
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from .object_detection_manager import ObjectDetectionManager
 
 
 class FrameDataManager:
-    def __init__(self, json_path: str, faiss_index_path: str):
+    def __init__(self, metadata_path: str, faiss_index_path: str):
         self.frame_data: Dict[str, FrameMetadataModel] = {}
         self.frame_id_to_index: Dict[str, int] = {}
         self.index_to_frame_id: Dict[int, str] = {}
         self.storage = redis_service
-        self.__load_frame_data(json_path)
-        self.faiss_index = self.__load_faiss_index(faiss_index_path)
+        self.metadata_path = metadata_path
+        self.faiss_index_path = faiss_index_path
 
-    def __load_frame_data(self, json_path: str):
-        with open(json_path, 'r') as f:
-            data = json.load(f)
+        classes = self._load_classes(
+            f'{metadata_path}/indexing/metadata_encoded/classes.csv')
+        visual_encoding_manager = VisualEncodingManager(classes)
+        self.object_detection_manager = ObjectDetectionManager(
+            visual_encoding_manager)
 
-        for idx, (frame_id, frame_info) in enumerate(data.items()):
-            keyframe = KeyframeInfo(**frame_info['keyframe'])
-            detection = None
-            if 'detection' in frame_info:
-                filtered_objects = self.__filter_valid_categories(
-                    frame_info['detection']['objects'])
-                filtered_counts = self.__filter_valid_categories(
-                    frame_info['detection']['counts'])
-                detection = ObjectDetection(
-                    objects=filtered_objects, counts=filtered_counts)
+        self._load_frame_data()
+        self.faiss_index = self._load_faiss_index()
 
-            frame_metadata = FrameMetadataModel(
-                id=frame_id,
-                keyframe=keyframe,
-                detection=detection
-            )
-            frame_metadata.keyframe.frame_path = frame_metadata.get_corrected_frame_path()
-            frame_metadata.keyframe.video_path = frame_metadata.get_corrected_video_path()
-            self.frame_data[frame_id] = frame_metadata
-            self.frame_id_to_index[frame_id] = idx
-            self.index_to_frame_id[idx] = frame_id
+    def _load_classes(self, csv_path: str) -> List[str]:
+        with open(csv_path, 'r') as f:
+            reader = csv.reader(f)
+            next(reader)  # Skip header
+            return [row[0] for row in reader]
 
-    def __filter_valid_categories(self, data: Dict) -> Dict:
-        return {Category(k): v for k, v in data.items() if k in Category.__members__}
+    def _load_frame_data(self):
+        keyframes_data, object_detection_data = self._load_json_data()
+        for idx, (frame_id, frame_info) in enumerate(keyframes_data.items()):
+            frame_metadata = self._create_frame_metadata(
+                frame_id, frame_info, object_detection_data)
+            self._add_frame_to_data(idx, frame_id, frame_metadata)
 
-    def __load_faiss_index(self, faiss_index_path: str):
-        return faiss.read_index(faiss_index_path)
+        logger.info(f"Processed {len(self.frame_data)} frames")
+
+    def _load_json_data(self) -> Tuple[Dict, Dict]:
+        keyframes_path = os.path.join(
+            self.metadata_path, 'keyframes_metadata.json')
+        object_detection_path = os.path.join(
+            self.metadata_path, 'object_extraction_metadata.json')
+        with open(keyframes_path, 'r') as f:
+            keyframes_data = json.load(f)
+        with open(object_detection_path, 'r') as f:
+            object_detection_data = json.load(f)
+        return keyframes_data, object_detection_data
+    
+    def __get_frame_dimensions(self, frame_path: str) -> Tuple[int, int]:
+        # full_path = os.path.join(Config.KEYFRAMES_DIR, frame_path)
+        # img = cv2.imread(full_path)
+        # if img is None:
+        #     logger.warning(f"Could not read image: {full_path}")
+        #     return 1280, 720
+        # return img.shape[1], img.shape[0]
+        return 1280, 720
+
+    def _create_frame_metadata(self, frame_id: str, frame_info: Dict, object_detection_data: Dict) -> FrameMetadataModel:
+        keyframe = KeyframeInfo(**frame_info)
+        frame_dimensions = self.__get_frame_dimensions(
+            f"keyframes/{keyframe.frame_path}")
+        detection = self.object_detection_manager.process_object_detection(
+            frame_id, object_detection_data, frame_dimensions)
+        frame_metadata = FrameMetadataModel(
+            id=frame_id, keyframe=keyframe, detection=detection)
+        frame_metadata.keyframe.frame_path = frame_metadata.get_corrected_frame_path()
+        frame_metadata.keyframe.video_path = frame_metadata.get_corrected_video_path()
+        return frame_metadata
+    
+    def _add_frame_to_data(self, idx: int, frame_id: str, frame_metadata: FrameMetadataModel):
+        self.frame_data[frame_id] = frame_metadata
+        self.frame_id_to_index[frame_id] = idx
+        self.index_to_frame_id[idx] = frame_id
+
+    def _load_faiss_index(self):
+        return faiss.read_index(self.faiss_index_path)
 
     def get_frame_by_id(self, frame_id: str) -> Optional[FrameMetadataModel]:
         frame = self.frame_data.get(frame_id)
@@ -67,7 +101,7 @@ class FrameDataManager:
         if frame_id:
             return self.get_frame_by_id(frame_id)
         return None
-    
+
     def get_all_frames(self) -> List[FrameMetadataModel]:
         return list(self.frame_data.values())
 
@@ -126,7 +160,6 @@ class FrameDataManager:
 
     def __get_selected_frames_score_key(self):
         return f"frame_scores:{Config.USER_ID}"
-
 
 frame_data_manager = FrameDataManager(
     Config.METADATA_PATH, Config.FAISS_BIN_PATH)

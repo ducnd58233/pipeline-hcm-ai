@@ -1,7 +1,7 @@
 from typing import Dict
 from sentence_transformers import SentenceTransformer, util
 import torch
-from app.services.fusion.abstract_fusion import AbstractFusion
+from .abstract_fusion import AbstractFusion
 from app.models import FrameMetadataModel, Score, SearchResult, QueriesStructure
 from app.utils.weight_normalizer import WeightNormalizer
 

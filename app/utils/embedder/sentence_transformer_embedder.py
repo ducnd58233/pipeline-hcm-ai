@@ -3,7 +3,7 @@ import torch
 from typing import Optional, Tuple
 from sentence_transformers import SentenceTransformer
 
-from app.utils.embedder.abstract_embedder import AbstractTextEmbedder
+from .abstract_embedder import AbstractTextEmbedder
 
 
 class SentenceTransformerEmbedder(AbstractTextEmbedder):

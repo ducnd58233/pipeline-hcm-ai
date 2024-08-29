@@ -3,7 +3,7 @@ import torch
 from typing import Optional, Tuple
 from open_clip import create_model_and_transforms, get_tokenizer
 
-from app.utils.embedder.abstract_embedder import AbstractTextEmbedder
+from .abstract_embedder import AbstractTextEmbedder
 
 
 class OpenClipEmbedder(AbstractTextEmbedder):

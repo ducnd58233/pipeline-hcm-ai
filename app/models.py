@@ -90,9 +90,16 @@ class Category(str, Enum):
 
 
 class ObjectQuery(BaseModel):
-    objects: Dict[str, Category] = Field(default_factory=dict)
+    objects: Union[Dict[str, Category],
+                   List[Tuple[int, str]]] = Field(default_factory=dict)
     logic: QueryLogic = QueryLogic.AND
     max_objects: Optional[int] = None
+
+    @validator('objects', pre=True)
+    def parse_objects(cls, v):
+        if isinstance(v, list):
+            return {str(k): Category(v) for k, v in v}
+        return v
 
     @classmethod
     def from_query_params(cls, objects: Dict[str, str], logic: str, max_objects: Optional[str] = None) -> 'ObjectQuery':
@@ -102,6 +109,13 @@ class ObjectQuery(BaseModel):
             logic=logic,
             max_objects=int(max_objects) if max_objects is not None else None
         )
+        
+    def parse_query(self) -> List[str]:
+        result = []
+        for position, category in self.objects.items():
+            value = category.value.strip().lower().replace(' ', '')
+            result.append(f"{position[1]}{position[0]}{value}")
+        return result
 
 class TextQuery(BaseModel):
     query: str
@@ -126,7 +140,7 @@ class QueriesStructure(BaseModel):
 class SearchRequest(BaseModel):
     queries: QueriesStructure
     page: int = Field(1, ge=1)
-    per_page: int = Field(20, ge=1, le=100)
+    per_page: int = Field(200, ge=1, le=1000)
 
     @classmethod
     def from_form(cls, form_data: Dict[str, str]) -> 'SearchRequest':
@@ -157,18 +171,14 @@ class SearchRequest(BaseModel):
 
 class ObjectDetectionItem(BaseModel):
     score: float
-    box: Tuple[float, float, float, float]
-
-    @validator('box')
-    def check_box(cls, v):
-        if len(v) != 4:
-            raise ValueError('box must contain exactly 4 values')
-        return v
+    box: List[float]
+    encoded_bbox: Optional[str] = None
 
 
 class ObjectDetection(BaseModel):
     objects: Dict[Category, List[ObjectDetectionItem]]
     counts: Dict[Category, int]
+    encoded_detection: str = ''
 
 
 class KeyframeInfo(BaseModel):
@@ -200,10 +210,6 @@ class Score(BaseModel):
     @property
     def get_value(self) -> float:
         return float(self.value)
-
-class ObjectDetectionItem(BaseModel):
-    score: float
-    box: List[float]
 
 class FrameMetadataModel(BaseModel):
     id: str

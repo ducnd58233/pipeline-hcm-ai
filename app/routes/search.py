@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.models import ObjectQuery, QueriesStructure, SearchRequest, Searcher, TextQuery
-from app.services.fusion.sbert_fusion import SentenceBertFusion
 from app.services.fusion.simple_fusion import SimpleFusion
 from app.services.reranker.sbert_reranker import SentenceBertReranker
 from app.services.reranker.simple_reranker import SimpleReranker
@@ -38,8 +37,8 @@ searchers = {
     'text': text_searcher,
     'object': object_detection_searcher
 }
-fusion = SentenceBertFusion()
-reranker = SentenceBertReranker()
+fusion = SimpleFusion()
+reranker = SimpleReranker()
 
 search_service = SearchService(
     text_searcher, object_detection_searcher, fusion, reranker)
@@ -50,7 +49,7 @@ async def get_search_params(
     text_weight: float = Query(0.5, ge=0.0, le=1.0),
     object_weight: float = Query(0.5, ge=0.0, le=1.0),
     page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100)
+    per_page: int = Query(200, ge=1, le=500)
 ):
 
     queries = QueriesStructure(

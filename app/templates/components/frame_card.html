@@ -8,7 +8,7 @@
     </div>
 
     <div class="frame-info">
-        <p>Frame ID: {{ frame.keyframe.id }}</p>
+        <p>Frame ID: {{ frame.id }}</p>
 
         {% if frame.score.value is defined %}
         <p>Similarity Score: {{ frame.score.value|round(4) if frame.score.value is not none else 'N/A' }}</p>

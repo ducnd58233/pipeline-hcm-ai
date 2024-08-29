@@ -1,4 +1,4 @@
-from app.services.reranker.abstract_reranker import AbstractReranker
+from .abstract_reranker import AbstractReranker
 from app.models import FrameMetadataModel, ObjectQuery
 from typing import Dict, List, Optional
 

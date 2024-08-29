@@ -28,14 +28,8 @@ class ObjectQueryVectorizer(AbstractQueryVectorizer):
         return load_npz(vectors_path)
 
     def vectorize(self, query: ObjectQuery) -> np.ndarray:
-        parsed_query = self.parse_query(query)
+        parsed_query = query.parse_query()
         query_text = ' '.join(parsed_query)
         logger.info(f'Object processed query: {query_text}')
         return self.vectorizer.transform([query_text])
 
-    def parse_query(self, query: ObjectQuery) -> List[str]:
-        result = []
-        for position, category in query.objects.items():
-            value = category.strip().lower().replace(' ', '')
-            result.append(f"{position[1]}{position[0]}{value}")
-        return result

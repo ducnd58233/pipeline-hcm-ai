@@ -12,7 +12,7 @@ class Config:
     VIDEOS_DIR = f'{BASE_DIR}/notebooks/data_extraction/dataset/AIC_Video'
     METADATA_DIR = f'{BASE_DIR}/notebooks/indexing/metadata_encoded'
 
-    METADATA_PATH = f'{BASE_DIR}/notebooks/final_metadata.json'
+    METADATA_PATH = f'{BASE_DIR}/notebooks'
     FAISS_BIN_PATH = f'{BASE_DIR}/notebooks/indexing/faiss_clipv2_cosine_cpu.bin'
     RESULTS_CSV_PATH = f'{BASE_DIR}/results.csv'
 

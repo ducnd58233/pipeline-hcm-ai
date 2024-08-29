@@ -1,10 +1,11 @@
 from app.services.searcher.abstract_searcher import AbstractSearcher
 from app.models import Score, SearchResult, FrameMetadataModel, TextQuery
-from app.utils.frame_data_manager import frame_data_manager
+from app.utils.data_manager.frame_data_manager import frame_data_manager
 from app.utils.query_vectorizer.text_vectorizer import TextQueryVectorizer
 from app.utils.indexer import FaissIndexer
-from typing import List
+from typing import List, Dict
 from app.log import logger
+import numpy as np
 
 
 class TextSearcher(AbstractSearcher):
@@ -17,16 +18,17 @@ class TextSearcher(AbstractSearcher):
 
         query_structure = await self.vectorizer.parse_query(query.query)
 
-        all_results = []
+        all_results: Dict[int, Dict] = {}
         for part in query_structure:
             if isinstance(part, list):
                 part_query = " ".join(part)
                 similar_frames = await self.search_similar_frames(part_query, top_k=per_page*page)
-                all_results.extend(similar_frames)
+                self.increase_scores(all_results, similar_frames)
 
-        unique_results = {result['frame_index']: result for result in all_results}
-        sorted_results = sorted(unique_results.values(
-        ), key=lambda x: x['similarity'], reverse=True)
+        self.rescale_scores(all_results)
+
+        sorted_results = sorted(all_results.values(),
+                                key=lambda x: x['similarity'], reverse=True)
 
         start = (page - 1) * per_page
         end = start + per_page
@@ -37,7 +39,7 @@ class TextSearcher(AbstractSearcher):
                 result['frame_index'])
             if frame:
                 frame.score = Score(value=float(result['similarity']), details={
-                                    'text': float(result['similarity'])})
+                                    'text': float(result['similarity']), 'match_count': result['match_count']})
                 result_frames.append(frame)
 
         return SearchResult(
@@ -54,10 +56,33 @@ class TextSearcher(AbstractSearcher):
 
         results = []
         for idx, distance in zip(indices[0], distances[0]):
-            similarity = 1 / (1 + distance + 1e-10)
+            similarity = 1 / (1 + distance)
             results.append({
                 'frame_index': int(idx),
                 'similarity': float(similarity)
             })
 
         return results
+
+    def increase_scores(self, all_results: Dict[int, Dict], new_results: List[Dict]):
+        for result in new_results:
+            frame_index = result['frame_index']
+            if frame_index in all_results:
+                all_results[frame_index]['similarity'] += result['similarity']
+                all_results[frame_index]['match_count'] += 1
+            else:
+                result['match_count'] = 1
+                all_results[frame_index] = result
+
+    def rescale_scores(self, all_results: Dict[int, Dict]):
+        scores = [result['similarity'] for result in all_results.values()]
+        min_score = min(scores)
+        max_score = max(scores)
+
+        if max_score > min_score:
+            for result in all_results.values():
+                result['similarity'] = (
+                    result['similarity'] - min_score) / (max_score - min_score)
+        else:
+            for result in all_results.values():
+                result['similarity'] = 1.0
