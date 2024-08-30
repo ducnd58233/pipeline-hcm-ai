@@ -1,0 +1,39 @@
+#selected-frames.htmx-swapping {
+  opacity: 0.5;
+}
+
+#selected-frames .frame-card {
+  flex: 0 0 auto;
+  width: 220px;
+}
+
+/* Styling for the scrollbar */
+#selected-frames-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+#selected-frames-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#selected-frames-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#selected-frames-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* For Firefox */
+#selected-frames-container {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Empty state styling */
+#selected-frames.empty {
+  justify-content: center;
+  align-items: center;
+}

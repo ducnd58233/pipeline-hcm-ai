@@ -33,15 +33,10 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), score: float
             {"request": request, "frames": selected_frames}
         ).body.decode()
 
-        search_results_frame_card_html = templates.TemplateResponse(
-            "components/frame_card.html",
-            {"request": request, "frame": frame}
-        ).body.decode()
-
         return f"""
-        <div hx-swap-oob="true" id="frame-{frame_id}">{frame_card_html}</div>
-        <div hx-swap-oob="true" id="selected-frames">{selected_frames_html}</div>
-        <div hx-swap-oob="true" id="frame-{frame_id}-search-result">{search_results_frame_card_html}</div>
+        <div id="frame-{frame_id}" hx-swap-oob="true">{frame_card_html}</div>
+        <div id="frame-{frame_id}-search-result" hx-swap-oob="true">{frame_card_html}</div>
+        <div id="selected-frames-container" hx-swap-oob="true">{selected_frames_html}</div>
         """
     except FrameNotFoundError as e:
         logger.error(f"Frame not found: {str(e)}")

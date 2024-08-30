@@ -1,9 +1,10 @@
 .frame-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /*auto-fill to make it not expanded when only 1 item*/
   gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
-  justify-content: flex-start;
   will-change: content;
 }
 
@@ -30,12 +31,28 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out,
+    background-color 0.3s ease-in-out;
+}
+
+.frame-card.htmx-added {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.frame-card.htmx-added.htmx-swapping {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.frame-card.htmx-swapping {
+  opacity: 0.5;
+  transform: scale(0.95);
 }
 
 .frame-card:hover {
@@ -106,8 +123,8 @@
 }
 
 .frame-card.selected {
-  background-color: #c7a535a4;
-  border-color: #0faeb9;
+  background-color: #e3f2fd;
+  border-color: #2196f3;
 }
 
 .toggle-container {

@@ -103,12 +103,8 @@ async def search(
         }
         logger.debug(f"Context for template: {context}")
 
-        is_htmx_request = request.headers.get("HX-Request") == "true"
 
-        if is_htmx_request:
-            return templates.TemplateResponse("components/frame_cards.html", context)
-        else:
-            return templates.TemplateResponse("components/search_results.html", context)
+        return templates.TemplateResponse("components/search_results.html", context)
     except Exception as e:
         logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
         raise HTTPException(

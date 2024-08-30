@@ -1,4 +1,5 @@
-<div id="frame-{{ frame.id }}" class="frame-card {% if frame.selected %}selected{% endif %}">
+<div id="frame-{{ frame.id }}" class="frame-card {% if frame.selected %}selected{% endif %}" _="on htmx:afterSwap wait 10ms then add .htmx-swapping end
+        on htmx:afterSettle remove .htmx-swapping">
     <div class="frame-image-container">
         {% if frame.keyframe.frame_path %}
         <img src="{{ frame.keyframe.frame_path }}" alt="Frame {{ frame.id }}">
@@ -15,10 +16,10 @@
     </div>
     <div class="frame-actions">
         <div class="toggle-container">
-            <input type="checkbox" id="toggle-{{ frame.id }}" name="frame_id"
-                class="toggle-input" {% if frame.selected %}checked{% endif %} hx-post="/toggle_frame"
-                hx-vals='{"frame_id": "{{ frame.id }}", "score": "{{ frame.score.value|default(0)}}"}'
-                hx-swap="none" hx-target="body" />
+            <input type="checkbox" id="toggle-{{ frame.id }}" name="frame_id" class="toggle-input" {% if frame.selected
+                %}checked{% endif %} hx-post="/toggle_frame"
+                hx-vals='{"frame_id": "{{ frame.id }}", "score": "{{ frame.score.value|default(0)}}"}' hx-swap="none"
+                hx-target="body" />
             <label for="toggle-{{ frame.id }}" class="toggle-slider"></label>
         </div>
         {% if frame.selected %}
