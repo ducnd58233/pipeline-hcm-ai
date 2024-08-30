@@ -11,6 +11,7 @@ from app.log import logger
 import numpy as np
 from .object_detection_manager import ObjectDetectionManager
 
+logger = logger.getChild(__name__)
 
 class FrameDataManager:
     def __init__(self, metadata_path: str, faiss_index_path: str):

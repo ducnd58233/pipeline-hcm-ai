@@ -17,6 +17,8 @@ from app.utils.search_processor import TextProcessor
 from app.utils.data_manager.grid_manager import grid_manager
 from config import Config
 
+logger = logger.getChild(__name__)
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -101,7 +103,9 @@ async def search(
         }
         logger.debug(f"Context for template: {context}")
 
-        if page > 1:
+        is_htmx_request = request.headers.get("HX-Request") == "true"
+
+        if is_htmx_request:
             return templates.TemplateResponse("components/frame_cards.html", context)
         else:
             return templates.TemplateResponse("components/search_results.html", context)

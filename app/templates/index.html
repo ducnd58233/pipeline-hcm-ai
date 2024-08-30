@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="main-content">
-    <h1>Video Retrieval System</h1>
+<div class="main-content p-4 sm:p-8 bg-gray-100">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">Video Retrieval System</h1>
 
     {% include 'components/search_bar.html' %}
 
-    <h2>Selected Frames</h2>
-    <div id="selected-frames" hx-get="/get_selected_frames" hx-trigger="load, frame-toggled from:body"></div>
+    <h2 class="text-2xl font-bold mb-4">Selected Frames</h2>
+    <div id="selected-frames" hx-get="/get_selected_frames" hx-trigger="load, frame-toggled from:body">
+    </div>
 
-    <h2>Search Results</h2>
+    <h2 class="text-2xl font-bold mb-4 mt-8">Search Results</h2>
     <div id="search-results">
         Enter a search query to see results.
     </div>

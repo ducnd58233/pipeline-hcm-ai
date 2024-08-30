@@ -1,7 +1,15 @@
 <h1><center>Pipeline HCM AI CHALLENGE <br> Event Retrieval from Visual Data</center></h1>
 
 ## Setup 
-Create Conda:
+**Step 0.** (optional) Download Miniconda
+```shell
+# The version of Anaconda may be different depending on when you are installing`
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+sh Miniconda3-latest-Linux-x86_64.sh
+# and follow the prompts. The defaults are generally good.`
+```
+
+**Step 1.** Create Conda (for python version):
 ```
 conda create -n hcm-ai python=3.9 -y
 conda activate hcm-ai
@@ -13,6 +21,7 @@ python -m venv venv
 pre-commit install
 ```
 
+**Step 2.** Create venv (for python installer requirements)
 Windows venv activation
 ```powershell
 # In cmd.exe
@@ -29,7 +38,6 @@ source venv/bin/activate
 ```
 pip install git+https://github.com/openai/CLIP.git
 pip install --default-timeout=1000 -r requirements.txt
-pip install -r requirements.txt
 ```
 
 ## Run 
@@ -37,11 +45,5 @@ pip install -r requirements.txt
 cp .env.example .env
 python run.py
 ```
-Or
-```
-uvicorn app.main:app --host 127.0.0.1 --port 5001 --reload
-```
 
 URL: http://127.0.0.1:5001/
-
-

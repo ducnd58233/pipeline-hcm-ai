@@ -6,6 +6,7 @@ from app.models import FrameMetadataModel, ObjectQuery, Score, SearchResult
 from app.utils.data_manager.frame_data_manager import frame_data_manager
 from app.utils.query_vectorizer.object_detection_vectorizer import ObjectQueryVectorizer
 
+logger = logger.getChild(__name__)
 
 class ObjectDetectionSearcher(AbstractSearcher):
     def __init__(self, vectorizer: ObjectQueryVectorizer):

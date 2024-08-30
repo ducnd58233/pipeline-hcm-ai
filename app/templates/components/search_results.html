@@ -1,7 +1,15 @@
-<div id="search-results" class="{% if not results %}empty{% endif %}">
+<div id="search-results" class="frame-container">
     {% if results %}
     {% include 'components/frame_cards.html' %}
+
     {% else %}
-    <p>No results found for "{{ query }}"</p>
+    <p class="text-center text-gray-600 text-lg">No results found for "{{ text_query }}"</p>
     {% endif %}
 </div>
+
+{% if has_more %}
+<div id="infinite-scroll-trigger" hx-get="/search" hx-trigger="revealed" hx-swap="beforeend" hx-target="#search-results"
+    hx-include="[name='text_query'],[name='text_weight'],[name='object_weight']">
+    <div class="htmx-indicator">Loading more results...</div>
+</div>
+{% endif %}

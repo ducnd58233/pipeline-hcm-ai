@@ -6,6 +6,7 @@ from app.services.fusion.abstract_fusion import AbstractFusion
 from app.services.reranker.abstract_reranker import AbstractReranker
 from app.log import logger
 
+logger = logger.getChild(__name__)
 
 class SearchService:
     def __init__(self,
