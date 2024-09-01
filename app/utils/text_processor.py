@@ -1,6 +1,6 @@
 import nltk
+from nltk import word_tokenize
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 import spacy
 from spacy.cli import download
 from googletrans import Translator
@@ -20,27 +20,40 @@ except OSError:
 class TextProcessor:
     def __init__(self):
         self.nlp = nlp
-        self.stop_words = set(stopwords.words('english'))
+        self.stop_words = set(stopwords.words('english')) - {"and", "or"}
         self.translator = Translator()
 
-    async def preprocess_query(self, query):
+    async def __preprocess_query(self, query):
         detected_lang = await asyncio.to_thread(self.translator.detect, query)
         if detected_lang.lang != 'en':
             translated = await asyncio.to_thread(self.translator.translate, query, dest='en')
             query = translated.text
 
-        tokens = word_tokenize(query.lower())
-        filtered_tokens = [
-            word for word in tokens if word not in self.stop_words]
+        return query.lower()
 
-        processed_query = ' '.join(filtered_tokens)
+    async def parse_long_query(self, query):
+        query = await self.__preprocess_query(query)
+        doc = self.nlp(query)
 
-        return processed_query
+        query_structure = []
+        current_chunk = []
 
-    async def parse_query(self, query):
-        query = await self.preprocess_query(query)
-        return query
+        for token in doc:
+            if token.text.lower() in ["and", "or"]:
+                if current_chunk:
+                    query_structure.append(current_chunk)
+                    current_chunk = []
+                query_structure.append(token.text.lower())
+            else:
+                current_chunk.append(token.text)
+
+        if current_chunk:
+            query_structure.append(current_chunk)
+
+        query_structure.append(doc.text.split())
+
+        return query_structure
 
     def tokenize_and_remove_stopwords(self, text):
         tokens = word_tokenize(text.lower())
-        return [w for w in tokens if w not in self.stop_words]
+        return [w for w in tokens if w not in self.stop_words or w.isdigit()]

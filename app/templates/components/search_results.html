@@ -1,6 +1,13 @@
 <div id="search-results" class="{% if not results %}empty{% endif %}">
+<div id="search-results" class="{% if not results %}empty{% endif %}">
     {% if results %}
-    {% include 'components/frame_cards.html' %}
+    <div class="frame-container" hx-get="/search" hx-trigger="revealed"
+        hx-vals='{"page": "{{ page + 1 }}", "query": "{{ query }}"}' hx-target="#search-results .frame-container"
+        hx-swap="beforeend">
+        {% for frame in results %}
+        {% include 'components/frame_card.html' %}
+        {% endfor %}
+    </div>
     {% else %}
     <p>No results found for "{{ query }}"</p>
     {% endif %}

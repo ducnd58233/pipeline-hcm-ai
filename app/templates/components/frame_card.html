@@ -2,6 +2,8 @@
     <div class="frame-image-container">
         {% if frame.keyframe.frame_path %}
         <img src="{{ frame.keyframe.frame_path }}" alt="Frame {{ frame.id }}">
+        {% if frame.keyframe.frame_path %}
+        <img src="{{ frame.keyframe.frame_path }}" alt="Frame {{ frame.id }}">
         {% else %}
         <div class="placeholder-image">No image available</div>
         {% endif %}
@@ -9,25 +11,25 @@
 
     <div class="frame-info">
         <p>Frame ID: {{ frame.id }}</p>
-        {% if frame.score.value is defined %}
-        <p>Similarity Score: {{ frame.score.value|round(4) if frame.score.value is not none else 'N/A' }}</p>
+
+        {% if frame.final_score is defined %}
+        <p>Similarity Score: {{ frame.final_score|round(4) if frame.final_score is not none else 'N/A' }}</p>
         {% endif %}
 
-        <div class="frame-select">
-            <input type="checkbox" id="select-{{ frame.id }}" name="select-{{ frame.id }}" {% if frame.selected
-                %}checked{% endif %} hx-post="/toggle_frame"
-                hx-vals='{"frame_id": "{{ frame.id }}", "score": "{{ frame.score.value|default(0) }}"}' hx-target="body"
-                hx-swap="none">
-            <label for="select-{{ frame.id }}">Select Frame</label>
-        </div>
+        <form hx-post="/toggle_frame" hx-target="#frame-{{ frame.id }}" hx-swap="outerHTML" hx-trigger="change"
+            hx-indicator=".htmx-indicator">
+            <input type="hidden" name="frame_id" value="{{ frame.id }}">
+            <input type="hidden" name="final_score" value="{{ frame.final_score }}">
+            <input type="checkbox" name="selected" {% if frame.selected %}checked{% endif %}>
+            <div class="htmx-indicator">Loading...</div>
+        </form>
 
-        {% if frame.selected %}
+        {% if is_selected_section %}
         <button hx-post="/submit_single_frame" hx-vals='{"frame_id": "{{ frame.id }}"}' hx-target="#modal-container"
-            hx-swap="innerHTML">
+            hx-swap="innerHTML" hx-indicator=".htmx-indicator" class="submit-button">
             Submit Frame
+            <div class="htmx-indicator">Submitting...</div>
         </button>
         {% endif %}
-
-        <div class="htmx-indicator">Loading...</div>
     </div>
 </div>

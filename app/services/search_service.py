@@ -1,73 +1,71 @@
-import asyncio
 from typing import List
-from app.models import SearchResult, FrameMetadataModel, QueriesStructure
-from app.services.searcher.abstract_searcher import AbstractSearcher
-from app.services.fusion.abstract_fusion import AbstractFusion
-from app.services.reranker.abstract_reranker import AbstractReranker
-from app.log import logger
+import asyncio
+from app.models import FrameMetadataModel
+from app.abstract_classes import AbstractVectorizer, AbstractIndexer, AbstractReranker
+from app.utils.frame_data_manager import frame_data_manager
 
 
 class SearchService:
-    def __init__(self,
-                 text_searcher: AbstractSearcher,
-                 object_detection_searcher: AbstractSearcher,
-                 fusion: AbstractFusion,
-                 reranker: AbstractReranker):
-        self.text_searcher = text_searcher
-        self.object_detection_searcher = object_detection_searcher
-        self.fusion = fusion
+    def __init__(self, vectorizer: AbstractVectorizer, indexer: AbstractIndexer, reranker: AbstractReranker, text_processor):
+        self.vectorizer = vectorizer
+        self.indexer = indexer
         self.reranker = reranker
+        self.text_processor = text_processor
+        self.batch_size = 100
+        self.max_results = 1000
 
-    async def search(self, queries: QueriesStructure, page: int = 1, per_page: int = 20) -> SearchResult:
-        try:
-            logger.info(
-                f"Performing search for queries: {queries}, page: {page}, per_page: {per_page}")
+    async def search(self, query: str, offset: int = 0, limit: int = 200) -> List[FrameMetadataModel]:
+        query_structure = await self.text_processor.parse_long_query(query)
 
-            search_tasks = []
-            if queries.text_searcher:
-                search_tasks.append(self.text_searcher.search(
-                    queries.text_searcher.query, page=page, per_page=page*per_page))
+        all_results = []
+        search_tasks = []
 
-            if queries.object_detection_searcher:
-                search_tasks.append(self.object_detection_searcher.search(
-                    queries.object_detection_searcher.query, page=page, per_page=page*per_page))
+        for query_part in query_structure:
+            if isinstance(query_part, list):
+                sub_query = " ".join(query_part)
+            elif isinstance(query_part, str):
+                sub_query = query_part
+            else:
+                continue
 
-            results = await asyncio.gather(*search_tasks)
+            query_vector = self.vectorizer.vectorize(sub_query)
+            search_tasks.append(self._search_part(query_vector))
 
-            searcher_results = {}
-            if queries.text_searcher:
-                searcher_results['text'] = results[0]
-            if queries.object_detection_searcher:
-                searcher_results['object'] = results[-1]
+        results = await asyncio.gather(*search_tasks)
+        for part_results in results:
+            all_results.extend(part_results)
 
-            merged_results = self.fusion.merge_results(
-                searcher_results, queries)
+        unique_results = list(
+            {result.id: result for result in all_results}.values())
+        reranked_results = self.reranker.rerank(
+            query, unique_results, query_structure)
 
-            text_query = queries.text_searcher.query.query if queries.text_searcher else None
-            object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
-            final_results = self.reranker.rerank(
-                merged_results, text_query, object_query)
+        return reranked_results[offset:offset+limit]
 
-            paginated_results = self._paginate_results(
-                final_results, page, per_page)
+    async def _search_part(self, query_vector) -> List[FrameMetadataModel]:
+        results = []
+        current_offset = 0
 
-            logger.info(
-                f"Search completed. Total results: {len(final_results)}, Current page: {page}")
-            return paginated_results
-        except Exception as e:
-            logger.error(
-                f"Error occurred during search: {str(e)}", exc_info=True)
-            raise
+        while len(results) < self.max_results:
+            batch_size = min(self.batch_size, self.max_results - len(results))
+            scores, indices = self.indexer.search(
+                query_vector, current_offset + batch_size)
 
-    def _paginate_results(self, sorted_results: List[FrameMetadataModel], page: int, per_page: int) -> SearchResult:
-        total_results = len(sorted_results)
-        start_idx = (page - 1) * per_page
-        end_idx = start_idx + per_page
-        paged_frames = sorted_results[start_idx:end_idx]
+            batch_results = self.get_frame_metadata(indices[0], scores[0])
+            results.extend(batch_results)
 
-        return SearchResult(
-            frames=paged_frames,
-            total=total_results,
-            page=page,
-            has_more=end_idx < total_results
-        )
+            if len(batch_results) < batch_size:
+                break
+
+            current_offset += batch_size
+
+        return results
+
+    def get_frame_metadata(self, indices, scores) -> List[FrameMetadataModel]:
+        results = []
+        for idx, score in zip(indices, scores):
+            frame = frame_data_manager.get_frame_by_index(int(idx))
+            if frame:
+                frame.score = score
+                results.append(frame)
+        return results

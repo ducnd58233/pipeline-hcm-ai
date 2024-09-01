@@ -13,14 +13,18 @@
 }
 
 .submit-button {
+    padding: 5px 10px;
+    font-size: 14px;
     background-color: #3498db;
     color: white;
-    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .submit-button:hover {
-    background-color: #2980b9;
-    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.5);
+    opacity: 0.8;
 }
 
 .confirm-button {
