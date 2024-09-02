@@ -12,9 +12,10 @@
    |- ...
 ```
 # Sample output file
-```
+
 ## Keyframes_Metadata
 - Example `tag_output/L01/V001_tagging.json`
+
 ```
 {
     "000000.jpg": [
@@ -42,6 +43,7 @@
         "sun",
         "sunset",
         "water"
-    ]
+    ],
+    ...
 }
 ```
