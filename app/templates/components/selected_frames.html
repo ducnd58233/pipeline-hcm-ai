@@ -1,6 +1,14 @@
 <div id="selected-frames-container">
-    <div id="selected-frames" class="frame-container {% if not frames %}empty{% endif %}" _="on htmx:afterSwap wait 10ms then add .htmx-swapping end
-          on htmx:afterSettle remove .htmx-swapping">
+    <div class="selected-frames-header">
+        <h2>Total:</h2>
+        <span class="frame-count">{{ frames|length }} frame{% if frames|length != 1 %}s{% endif %} selected</span>
+    </div>
+    <div class="submit-all-container">
+        <button hx-post="/submit_all_frames" hx-target="#modal-container">Submit All Frames</button>
+    </div>
+
+    <div id="selected-frames" class="frame-container {% if not frames %}empty{% endif %}" _="on htmx:afterSwap wait 10ms then add .htmx-swapping end 
+    on htmx:afterSettle remove .htmx-swapping">
         {% if frames %}
         {% for frame in frames %}
         {% with frame=frame, is_selected_section=True %}

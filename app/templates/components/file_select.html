@@ -1,0 +1,6 @@
+<select name="file_name" id="file_name" hx-get="/get_file_contents" hx-target="#file-contents" hx-trigger="change">
+    <option value="">Select existing file</option>
+    {% for file in existing_files %}
+    <option value="{{ file }}" {% if file==selected_file %}selected{% endif %}>{{ file }}</option>
+    {% endfor %}
+</select>

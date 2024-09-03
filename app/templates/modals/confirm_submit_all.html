@@ -1,0 +1,32 @@
+<div id="confirm-submit-all-modal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Submission</h2>
+        <p>Are you sure you want to submit all {{ frame_count }} selected frames?</p>
+
+        <form hx-post="/confirm_submit_all" hx-target="body">
+            <div class="csv-file-selection">
+                <select name="file_name" id="file_name" hx-get="/get_file_contents" hx-target="#file-contents"
+                    hx-trigger="change">
+                    <option value="">Select existing file</option>
+                    {% for file in existing_files %}
+                    <option value="{{ file }}">{{ file }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="new-file-input">
+                    <input type="text" name="new_file_name" id="new_file_name" placeholder="New file name">
+                    <button type="button" hx-post="/create_file" hx-target="#file-name" hx-swap="outerHTML">Create new
+                        file</button>
+                </div>
+            </div>
+
+            <div id="file-contents">
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit">Confirm</button>
+                <button type="button" hx-get="/close_modal" hx-target="#modal-container">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>

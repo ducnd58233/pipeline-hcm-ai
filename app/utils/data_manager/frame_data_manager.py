@@ -155,6 +155,18 @@ class FrameDataManager:
 
         logger.info(
             f"Cleared all selected frames and scores for user {Config.USER_ID}")
+    
+    def remove_frame_selection(self, frame_id: str):
+        frame = self.get_frame_by_id(frame_id)
+        if frame and frame.selected:
+            selected_frame_key = self.__get_selected_frames_key()
+            score_key = self.__get_selected_frames_score_key()
+
+            redis_service.remove_from_set(selected_frame_key, frame_id)
+            redis_service.zrem(score_key, frame_id)
+            frame.selected = False
+            frame.final_score = 0.0
+            logger.debug(f'Removed frame selection: {frame}')
 
     def __get_selected_frames_key(self):
         return f"selected_frames:{Config.USER_ID}"
