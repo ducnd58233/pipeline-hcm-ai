@@ -2,11 +2,14 @@
     <div class="modal-content">
         <h2>Confirm Submission</h2>
         <p>Are you sure you want to submit this frame?</p>
-        <button hx-post="/confirm_submit_single" hx-vals='{"frame_id": "{{ frame_id }}"}' class="confirm-button">
-            Yes, Submit
-        </button>
-        <button hx-get="/close_modal" hx-target="#modal-container" hx-swap="innerHTML" class="cancel-button">
-            Cancel
-        </button>
+
+        <div class="modal-actions">
+            <button type="submit" hx-post="/confirm_submit_single" hx-vals='{"frame_id": "{{ frame_id }}"}' class="confirm-button">
+                Yes, Submit
+            </button>
+            <button type="button" hx-get="/close_modal" hx-target="#modal-container" hx-swap="innerHTML" class="cancel-button">
+                Cancel
+            </button>
+        </div>
     </div>
 </div>
