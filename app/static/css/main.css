@@ -5,6 +5,7 @@
 @import "icon_grid.css";
 @import "icon_search_bar.css";
 @import "csv_file.css";
+@import "file_contents.css";
 
 body {
     font-family: Arial, sans-serif;

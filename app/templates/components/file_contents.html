@@ -1,27 +1,35 @@
 <div id="file-contents">
     <h3>File: {{ file_name }}</h3>
 
-    <h4>Existing Frames:</h4>
-    {% for frame in contents.existing_frames %}
-    <div class="existing-frame">
-        {% include "components/frame_card.html" %}
-        <button hx-post="/remove_frame_from_file" hx-include="[name='file_name']"
-            hx-vals='{"frame_id": "{{ frame.id }}"}' hx-target="#file-contents">
-            Remove
-        </button>
+    <div class="frames-section frames-to-add">
+        <h4>Frames to Add ({{ contents.frames_to_add|length }}):</h4>
+        <div class="frame-grid">
+            {% for frame in contents.frames_to_add %}
+            <div class="frame-item">
+                {% include "components/frame_card.html" %}
+                <button hx-post="/add_frame_to_file" hx-include="[name='file_name']"
+                    hx-vals='{"frame_id": "{{ frame.id }}"}' hx-target="#file-contents">
+                    Add
+                </button>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-    {% endfor %}
 
-    <h4>Frames to Add:</h4>
-    {% for frame in contents.frames_to_add %}
-    <div class="frame-to-add">
-        {% include "components/frame_card.html" %}
-        <button hx-post="/add_frame_to_file" hx-include="[name='file_name']" hx-vals='{"frame_id": "{{ frame.id }}"}'
-            hx-target="#file-contents">
-            Add
-        </button>
+    <div class="frames-section existing-frames">
+        <h4>Existing Frames ({{ contents.existing_frames|length }}):</h4>
+        <div class="frame-grid">
+            {% for frame in contents.existing_frames %}
+            <div class="frame-item">
+                {% include "components/frame_card.html" %}
+                <button hx-post="/remove_frame_from_file" hx-include="[name='file_name']"
+                    hx-vals='{"frame_id": "{{ frame.id }}"}' hx-target="#file-contents">
+                    Remove
+                </button>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-    {% endfor %}
 
     {% if contents.limit_exceeded %}
     <p class="warning">File limit exceeded. Remove some frames or create a new file.</p>
