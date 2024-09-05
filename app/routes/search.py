@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request, HTTPException
+from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from app.models import ObjectQuery, QueriesStructure, SearchRequest, Searcher, TextQuery
@@ -45,38 +45,72 @@ reranker = SimpleReranker()
 search_service = SearchService(
     text_searcher, object_detection_searcher, fusion, reranker)
 
+weights = {
+    'text': 50,
+    'object': 50,
+}
 
-async def get_search_params(
-    text_query: str = Query(""),
-    text_weight: float = Query(0.5, ge=0.0, le=1.0),
-    object_weight: float = Query(0.5, ge=0.0, le=1.0),
-    page: int = Query(1, ge=1),
-    per_page: int = Query(200, ge=1, le=500)
-):
 
-    queries = QueriesStructure(
-        text_searcher=Searcher(query=TextQuery(
-            query=text_query), weight=text_weight) if text_query else None,
-        object_detection_searcher=None
-    )
-    return queries, object_weight, page, per_page
+@router.get("/weight_adjusters", response_class=HTMLResponse)
+async def get_weight_adjusters(request: Request):
+    logger.info('Rendering weight adjusters')
+    return templates.TemplateResponse("components/weight_adjusters.html", {
+        "request": request,
+        "text_weight": weights['text'],
+        "object_weight": weights['object'],
+    })
+
+
+@router.post("/update_weight", response_class=HTMLResponse)
+async def update_weight(request: Request):
+    form_data = await request.form()
+    logger.info(f"Received form data: {form_data}")
+
+    try:
+        wid = form_data.get("id")
+        value = int(form_data.get(
+            f"weight-{wid}", form_data.get("weight_input", "0")))
+
+        value = max(0, min(100, value))
+        weights[wid] = value
+        label = "Text Weight" if wid == "text" else "Object Weight"
+        logger.info(f'Updating {wid} weight to {value}')
+
+        response = templates.TemplateResponse("components/weight_adjuster.html", {
+            "request": request,
+            "id": wid,
+            "value": value,
+            "label": label
+        })
+
+        response.headers["HX-Trigger"] = "weight-changed"
+        return response
+    except Exception as e:
+        logger.error(f"Error in update_weight: {str(e)}")
+        raise HTTPException(status_code=422, detail="Invalid input data")
 
 
 @router.post("/search", response_class=HTMLResponse)
 @router.get("/search", response_class=HTMLResponse)
 async def search(
     request: Request,
-    query_params: tuple[QueriesStructure, float,
-                        int, int] = Depends(get_search_params)
+    text_query: str = Query(""),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(200, ge=1, le=500)
 ):
     try:
-        queries, object_weight, page, per_page = query_params
+        queries = QueriesStructure(
+            text_searcher=Searcher(query=TextQuery(
+                query=text_query), weight=weights['text']/100) if text_query else None,
+            object_detection_searcher=None
+        )
+        
         object_query = ObjectQuery()
         object_query.objects = grid_manager.get_state()
 
         if object_query.objects:
             queries.object_detection_searcher = Searcher(
-                query=object_query, weight=object_weight)
+                query=object_query, weight=weights['object'] / 100)
 
         search_request = SearchRequest(
             queries=queries,
@@ -94,15 +128,14 @@ async def search(
             "results": results.frames if results else [],
             "text_query": queries.text_searcher.query.query if queries.text_searcher else "",
             "object_query": grid_manager.get_state(),
-            "text_weight": queries.text_searcher.weight if queries.text_searcher else 0.5,
-            "object_weight": queries.object_detection_searcher.weight if queries.object_detection_searcher else 0.5,
+            "text_weight": weights['text'] / 100,
+            "object_weight": weights['object'] / 100,
             "page": page,
             "per_page": per_page,
             "total": results.total if results else 0,
             "has_more": results.has_more if results else False
         }
         logger.debug(f"Context for template: {context}")
-
 
         return templates.TemplateResponse("components/search_results.html", context)
     except Exception as e:

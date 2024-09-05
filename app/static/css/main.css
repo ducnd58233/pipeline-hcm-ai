@@ -6,14 +6,22 @@
 @import "icon_search_bar.css";
 @import "csv_file.css";
 @import "file_contents.css";
+@import "weight_adjuster.css";
 
 body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     color: #333;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
 }
 
 .main-content {
@@ -28,39 +36,35 @@ body {
     background-color: #f8f9fa;
     padding: 20px;
     box-sizing: border-box;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Tablet and larger screens */
 @media (min-width: 768px) {
-    body {
+    .md\:flex-row {
         flex-direction: row;
     }
 
-    .main-content {
-        width: 70%;
+    .md\:w-1\/5 {
+        width: 20%;
     }
 
-    .sidebar {
-        width: 30%;
+    .md\:w-3\/5 {
+        width: 60%;
+    }
+
+    .left-sidebar, .right-sidebar {
         height: 100vh;
-        padding: 20px;
-        position: fixed;
-        top: 0;
-        right: 0;
         overflow-y: auto;
     }
 }
 
-@media (min-width: 1200px) {
-    .main-content {
-        width: 80%;
-        padding: 20px;
+@media (max-width: 767px) {
+    .flex-col {
+        flex-direction: column;
     }
 
     .sidebar {
-        width: 20%;
-        padding: 20px;
+        margin-bottom: 20px;
     }
 }
 
@@ -70,16 +74,42 @@ body {
     }
 }
 
-@media (max-width: 768px) {
-    body {
-        font-size: 14px;
-    }
+h1 {
+    font-size: 2em;
+}
 
-    h1 {
-        font-size: 1.8em;
-    }
+h2 {
+    font-size: 1.5em;
+}
 
-    h2 {
-        font-size: 1.5em;
-    }
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mt-8 {
+    margin-top: 2rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.sm\:p-8 {
+    padding: 2rem;
+}
+
+.bg-gray-100 {
+    background-color: #f3f4f6;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-gray-800 {
+    color: #2d3748;
 }

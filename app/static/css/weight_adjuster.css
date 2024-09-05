@@ -1,0 +1,50 @@
+.weight-adjusters {
+  margin-bottom: 20px;
+}
+
+.weight-adjuster-container {
+  margin-bottom: 20px;
+}
+
+.weight-adjuster {
+  display: flex;
+  flex-direction: column;
+}
+
+.weight-label {
+  margin-bottom: 10px;
+}
+
+.weight-label label {
+  font-weight: bold;
+}
+
+.weight-inputs {
+  display: flex;
+  flex-direction: row;
+}
+
+.weight-adjuster input[type="range"] {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.weight-adjuster input[type="number"] {
+  width: 60px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+@media (min-width: 768px) {
+  .weight-inputs {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .weight-adjuster input[type="range"] {
+    flex-grow: 1;
+    margin-right: 10px;
+    margin-bottom: 0;
+  }
+}
