@@ -1,3 +1,4 @@
+import numpy as np
 from app.services.searcher.abstract_searcher import AbstractSearcher
 from app.models import Score, SearchResult, FrameMetadataModel, TextQuery
 from app.utils.data_manager.frame_data_manager import frame_data_manager
@@ -17,6 +18,10 @@ class TextSearcher(AbstractSearcher):
         logger.info(f"Performing text search with query: {query.query}")
 
         similar_frames = await self.search_similar_frames(query.query, top_k=per_page*page + 50)
+        
+        if not similar_frames:
+            logger.warning("No similar frames found for the given query.")
+            return SearchResult(frames=[], total=0, page=page, has_more=False)
 
         sorted_results = sorted(similar_frames,
                                 key=lambda x: x['similarity'], reverse=True)
@@ -33,17 +38,24 @@ class TextSearcher(AbstractSearcher):
                                     'text': float(result['similarity'])})
                 result_frames.append(frame)
 
+        total_results = len(sorted_results)
+        logger.debug(f"Retrieved {total_results} frames")
+
         return SearchResult(
             frames=result_frames,
-            total=len(sorted_results),
+            total=total_results,
             page=page,
-            has_more=end < len(sorted_results)
+            has_more=end < total_results
         )
 
     async def search_similar_frames(self, query: str, top_k: int = 5) -> List[dict]:
         query_vector = await self.vectorizer.vectorize(query)
 
         distances, indices = self.indexer.search(query_vector, k=top_k)
+        if np.all(indices[0] == -1):
+            logger.warning(
+                "All search indices are -1. This might indicate an issue with the index or the query vector.")
+            return []
 
         results = []
         for idx, distance in zip(indices[0], distances[0]):

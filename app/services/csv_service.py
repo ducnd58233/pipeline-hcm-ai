@@ -77,7 +77,7 @@ def get_file_contents(file_name: str) -> Dict:
             next(reader)  # Skip header
             for row in reader:
                 frame_id = row[0]
-                frame = frame_data_manager.get_frame_by_id(frame_id)
+                frame = frame_data_manager.get_frame_by_key(frame_id)
                 if frame:
                     existing_frames.append(frame)
                     frame_ids.add(frame_id)

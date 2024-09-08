@@ -16,7 +16,13 @@ class TextQueryVectorizer(AbstractQueryVectorizer):
     async def vectorize(self, query: str) -> np.ndarray:
         preprocessed_query = await self.parse_query(query)
         logger.info(f'Text processed query: {preprocessed_query}')
-        return self.embedder.embed(preprocessed_query)
+
+        embedding = self.embedder.embed(preprocessed_query)
+
+        logger.debug(f"Final query vector shape: {embedding.shape}")
+        logger.debug(f"Final query vector: {embedding}")
+
+        return embedding
 
     async def preprocess_query(self, query: str) -> str:
         return await self.text_processor.preprocess_query(query)

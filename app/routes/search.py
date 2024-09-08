@@ -25,7 +25,7 @@ templates = Jinja2Templates(directory="app/templates")
 indexer = FaissIndexer(index_path=Config.FAISS_BIN_PATH)
 feature_shape = (indexer.index.d,)
 
-text_embedder = OpenClipEmbedder(feature_shape=feature_shape)
+text_embedder = OpenClipEmbedder(model_name=Config.CLIP_MODEL_NAME, feature_shape=feature_shape)
 text_processor = TextProcessor()
 
 text_query_vectorizer = TextQueryVectorizer(text_embedder, text_processor)

@@ -8,11 +8,13 @@ BASE_DIR = os.getcwd()
 class Config:
     ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://localhost:9200')
 
-    KEYFRAMES_DIR = f'{BASE_DIR}/notebooks/data_extraction/transnet/Keyframes'
+    KEYFRAMES_DIR = f'{BASE_DIR}/notebooks/data_extraction/transnet/keyframes'
     VIDEOS_DIR = f'{BASE_DIR}/notebooks/data_extraction/dataset/AIC_Video'
-    METADATA_DIR = f'{BASE_DIR}/notebooks/indexing/metadata_encoded'
+    METADATA_ENCODED_DIR = f'{BASE_DIR}/notebooks/indexing/metadata_encoded'
+    
+    OD_ENCODED_DIR = f'{METADATA_ENCODED_DIR}/object_detection'
 
-    METADATA_PATH = f'{BASE_DIR}/notebooks'
+    METADATA_DIR = f'{BASE_DIR}/notebooks'
     FAISS_BIN_PATH = f'{BASE_DIR}/notebooks/indexing/faiss_clipv2_cosine_cpu.bin'
     RESULTS_DIR = f'{BASE_DIR}'
 

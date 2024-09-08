@@ -2,6 +2,8 @@ import os
 import pickle
 from scipy.sparse import load_npz
 from typing import List
+
+from sklearn.metrics.pairwise import cosine_similarity
 from app.utils.query_vectorizer.abstract_query_vectorizer import AbstractQueryVectorizer
 from app.models import ObjectQuery
 import numpy as np
@@ -15,16 +17,19 @@ class ObjectQueryVectorizer(AbstractQueryVectorizer):
     def __init__(self):
         self.vectorizer = self.__load_vectorizer()
         self.vectors = self.__load_vectors()
+        logger.debug(f'vectorizer: {self.vectorizer}')
+        logger.debug(f'vector: {self.vectors}')
+        
 
     def __load_vectorizer(self):
         vectorizer_path = os.path.join(
-            Config.METADATA_DIR, 'bbox_vectorizer.pkl')
+            Config.OD_ENCODED_DIR, 'bbox_vectorizer.pkl')
         with open(vectorizer_path, 'rb') as f:
             return pickle.load(f)
 
     def __load_vectors(self):
         vectors_path = os.path.join(
-            Config.METADATA_DIR, 'bbox_vectors.npz')
+            Config.OD_ENCODED_DIR, 'bbox_vectors.npz')
         return load_npz(vectors_path)
 
     def vectorize(self, query: ObjectQuery) -> np.ndarray:
@@ -33,3 +38,8 @@ class ObjectQueryVectorizer(AbstractQueryVectorizer):
         logger.info(f'Object processed query: {query_text}')
         return self.vectorizer.transform([query_text])
 
+    def search(self, query_vector, k):   
+        similarities = cosine_similarity(self.vectors, query_vector).flatten()
+                
+        top_indices = similarities.argsort()[-k:][::-1]
+        return similarities, top_indices

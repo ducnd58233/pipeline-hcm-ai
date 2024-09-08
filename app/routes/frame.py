@@ -24,7 +24,7 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), score: float
             f"Received toggle request for frame_id: {frame_id}, score: {score}")
         frame_data_manager.toggle_frame_selection(frame_id, score)
 
-        frame = frame_data_manager.get_frame_by_id(frame_id)
+        frame = frame_data_manager.get_frame_by_key(frame_id)
         selected_frames = frame_data_manager.get_selected_frames()
 
         frame_card_html = templates.TemplateResponse(
@@ -53,7 +53,7 @@ async def toggle_frame(request: Request, frame_id: str = Form(...), score: float
 
 @router.get("/get_frame_card/{frame_id}", response_class=HTMLResponse)
 async def get_frame_card(request: Request, frame_id: str):
-    frame = frame_data_manager.get_frame_by_id(frame_id)
+    frame = frame_data_manager.get_frame_by_key(frame_id)
     if frame is None:
         raise HTTPException(
             status_code=404, detail=f"Frame not found: {frame_id}")
@@ -110,7 +110,7 @@ async def create_file(request: Request, new_file_name: str = Form(...)):
 
 @router.post("/add_frame_to_file", response_class=HTMLResponse)
 async def add_frame_to_file_route(request: Request, file_name: str = Form(...), frame_id: str = Form(...)):
-    frame = frame_data_manager.get_frame_by_id(frame_id)
+    frame = frame_data_manager.get_frame_by_key(frame_id)
     if frame is None:
         raise HTTPException(
             status_code=404, detail=f"Frame not found: {frame_id}")
@@ -142,7 +142,7 @@ async def confirm_submit_single(
     new_file_name: Optional[str] = Form(None)
 ):
     try:
-        frame = frame_data_manager.get_frame_by_id(frame_id)
+        frame = frame_data_manager.get_frame_by_key(frame_id)
         if frame is None:
             raise FrameNotFoundError(f"Frame not found: {frame_id}")
 

@@ -109,13 +109,14 @@ class ObjectQuery(BaseModel):
             logic=logic,
             max_objects=int(max_objects) if max_objects is not None else None
         )
-        
+
     def parse_query(self) -> List[str]:
         result = []
         for position, category in self.objects.items():
             value = category.value.strip().lower().replace(' ', '')
             result.append(f"{position[1]}{position[0]}{value}")
         return result
+
 
 class TextQuery(BaseModel):
     query: str
@@ -181,6 +182,7 @@ class ObjectDetection(BaseModel):
     encoded_detection: str = ''
 
 
+
 class KeyframeInfo(BaseModel):
     shot_index: int
     frame_index: int
@@ -189,6 +191,8 @@ class KeyframeInfo(BaseModel):
     timestamp: float
     video_path: str
     frame_path: str
+    width: int
+    height: int
 
     @validator('shot_index', 'frame_index', 'shot_start', 'shot_end')
     def check_positive(cls, v):
@@ -211,6 +215,7 @@ class Score(BaseModel):
     def get_value(self) -> float:
         return float(self.value)
 
+
 class FrameMetadataModel(BaseModel):
     id: str
     keyframe: KeyframeInfo
@@ -219,7 +224,7 @@ class FrameMetadataModel(BaseModel):
     selected: bool = Field(default=False)
 
     def get_corrected_frame_path(self) -> str:
-        return f"keyframes/{self.keyframe.frame_path}"
+        return f"{self.keyframe.frame_path}"
 
     def get_corrected_video_path(self) -> str:
         return f"videos/{self.keyframe.video_path}"
