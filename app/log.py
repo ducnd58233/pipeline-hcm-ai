@@ -30,13 +30,13 @@ logging_config = {
         "file": {
             "class": "logging.FileHandler",
             "formatter": "default",
-            "level": "INFO",
+            "level": "DEBUG",
             "filename": "app.log",
         },
     },
     "root": {
         "handlers": ["console", "file"],
-        "level": "INFO",
+        "level": "DEBUG",
     },
 }
 

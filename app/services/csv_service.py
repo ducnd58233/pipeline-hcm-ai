@@ -12,25 +12,39 @@ logger = logger.getChild(__name__)
 
 async def save_single_frame_to_csv(frame: FrameMetadataModel, file_name: str):
     logger.info(f"Saving frame {frame.id} to CSV file: {file_name}")
-    await asyncio.to_thread(_write_single_frame_csv, frame, file_name)
+    await asyncio.to_thread(add_frame_to_file, frame, file_name)
     logger.info(f"CSV saved to {os.path.join(Config.RESULTS_DIR, file_name)}")
 
 
-def _write_single_frame_csv(frame: FrameMetadataModel, file_name: str):
+def add_frame_to_file(frame: FrameMetadataModel, file_name: str):
     file_path = os.path.join(Config.RESULTS_DIR, file_name)
-    file_exists = os.path.isfile(file_path)
-
-    if is_frame_in_csv(frame.id, file_name):
-        logger.warning(
-            f"Frame {frame.id} already exists in {file_name}. Skipping...")
-        return
-
     with open(file_path, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        if not file_exists:
-            writer.writerow(['frame_id', 'frame_path', 'score'])
-        writer.writerow(
-            [frame.id, f"keyframes/{frame.keyframe.frame_path}", frame.final_score])
+        # writer.writerow(
+        #     [frame.id, f"keyframes/{frame.keyframe.frame_path}", frame.final_score])
+        video_id, frame_idx = frame.get_frame_info()
+        writer.writerow([video_id, frame_idx])
+
+
+def remove_frame_from_file(frame_id: str, file_name: str):
+    file_path = os.path.join(Config.RESULTS_DIR, file_name)
+    temp_file_path = os.path.join(Config.RESULTS_DIR, f"temp_{file_name}")
+    frame_id_part = frame_id.split('_')
+    video_id = '_'.join(frame_id_part[:2])
+    frame_idx = int(frame_id_part[-1])
+
+    with open(file_path, 'r') as csvfile, open(temp_file_path, 'w', newline='') as temp_file:
+        reader = csv.reader(csvfile)
+        writer = csv.writer(temp_file)
+
+        header = next(reader)
+        writer.writerow(header)
+
+        for row in reader:
+            if row[0] != video_id and int(row[1]) != frame_idx:
+                writer.writerow(row)
+
+    os.replace(temp_file_path, file_path)
 
 
 def get_existing_csv_files() -> List[str]:
@@ -49,8 +63,8 @@ def create_new_csv_file(file_name: str) -> str:
         counter += 1
 
     with open(file_path, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['frame_id', 'frame_path', 'score'])
+        csv.writer(csvfile)
+        # writer.writerow(['frame_id', 'frame_path', 'score'])
 
     return file_name
 
@@ -62,8 +76,12 @@ def is_frame_in_csv(frame_id: str, file_name: str) -> bool:
 
     with open(file_path, 'r') as csvfile:
         reader = csv.reader(csvfile)
-        next(reader)  # Skip header
-        return any(row[0] == frame_id for row in reader)
+        # next(reader)  # Skip header
+        # return any(row[0] == frame_id for row in reader)
+        frame_part = frame_id.split('_')
+        video_id = '_'.join(frame_part[:2])
+        frame_idx = int(frame_part[-1])
+        return any(row[0] == video_id and int(row[1]) == frame_idx for row in reader)
 
 
 def get_file_contents(file_name: str) -> Dict:
@@ -74,10 +92,13 @@ def get_file_contents(file_name: str) -> Dict:
     if os.path.exists(file_path):
         with open(file_path, 'r') as csvfile:
             reader = csv.reader(csvfile)
-            next(reader)  # Skip header
+            # next(reader)  # Skip header
             for row in reader:
-                frame_id = row[0]
-                frame = frame_data_manager.get_frame_by_key(frame_id)
+                frame_id = f'{row[0]}_{int(row[1]):06d}'
+                frame_id_extra = f'{row[0]}_extra_{int(row[1]):06d}'
+                frame = frame_data_manager.get_frame_by_key(
+                    frame_id) or frame_data_manager.get_frame_by_key(frame_id_extra)
+                logger.info(f'frame_id: {frame_id} - frame_id_extra: {frame_id_extra} - frame: {frame}')
                 if frame:
                     existing_frames.append(frame)
                     frame_ids.add(frame_id)
@@ -92,29 +113,3 @@ def get_file_contents(file_name: str) -> Dict:
         "frames_to_add": frames_to_add,
         "limit_exceeded": limit_exceeded
     }
-
-
-def add_frame_to_file(frame: FrameMetadataModel, file_name: str):
-    file_path = os.path.join(Config.RESULTS_DIR, file_name)
-    with open(file_path, 'a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(
-            [frame.id, f"keyframes/{frame.keyframe.frame_path}", frame.final_score])
-
-
-def remove_frame_from_file(frame_id: str, file_name: str):
-    file_path = os.path.join(Config.RESULTS_DIR, file_name)
-    temp_file_path = os.path.join(Config.RESULTS_DIR, f"temp_{file_name}")
-
-    with open(file_path, 'r') as csvfile, open(temp_file_path, 'w', newline='') as temp_file:
-        reader = csv.reader(csvfile)
-        writer = csv.writer(temp_file)
-
-        header = next(reader)
-        writer.writerow(header)
-
-        for row in reader:
-            if row[0] != frame_id:
-                writer.writerow(row)
-
-    os.replace(temp_file_path, file_path)

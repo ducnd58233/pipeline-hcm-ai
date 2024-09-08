@@ -182,7 +182,6 @@ class ObjectDetection(BaseModel):
     encoded_detection: str = ''
 
 
-
 class KeyframeInfo(BaseModel):
     shot_index: int
     frame_index: int
@@ -228,6 +227,11 @@ class FrameMetadataModel(BaseModel):
 
     def get_corrected_video_path(self) -> str:
         return f"videos/{self.keyframe.video_path}"
+
+    def get_frame_info(self) -> Tuple[str, int]:
+        frame_part = self.id.split('_')
+        video_id = '_'.join(frame_part[:2])
+        return (video_id, self.keyframe.frame_index)
 
     @property
     def final_score(self) -> float:
