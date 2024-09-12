@@ -1,7 +1,19 @@
-<div id="search-results" class="{% if not results %}empty{% endif %}">
+<div id="search-results" class="frame-container">
     {% if results %}
-    {% include 'components/frame_cards.html' %}
+    {% for frame in results %}
+    {% include 'components/frame_card.html' %}
+    {% endfor %}
+
     {% else %}
-    <p>No results found for "{{ query }}"</p>
+    <p class="text-center text-gray-600 text-lg">No results found for "{{ text_query }}"</p>
     {% endif %}
 </div>
+
+{% if has_more %}
+<div id="infinite-scroll-trigger" hx-get="/search" hx-trigger="revealed" hx-swap="beforeend" hx-target="#search-results"
+    hx-vals='{"text_query": "{{ text_query }}", "text_weight": "{{ text_weight }}", "object_weight": "{{ object_weight }}", "page": "{{ page + 1 }}", "per_page": "{{ per_page }}"}'>
+    <div class="htmx-indicator">
+        Loading more results...
+    </div>
+</div>
+{% endif %}

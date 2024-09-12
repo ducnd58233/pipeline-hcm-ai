@@ -1,0 +1,73 @@
+.csv-file-selection {
+    margin-bottom: 15px;
+}
+
+.csv-file-selection select,
+.csv-file-selection input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.new-file-input {
+    display: flex;
+    align-items: center;
+}
+
+.new-file-input input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.submit-all-container {
+    margin-top: 20px;
+    text-align: center;
+    padding: 0 15px;
+}
+
+.submit-all-button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.submit-all-button:hover {
+    background-color: #45a049;
+}
+
+#confirm-submit-all-modal .modal-content {
+    max-width: 400px;
+}
+
+#confirm-submit-all-modal .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+#confirm-submit-all-modal .confirm-button,
+#confirm-submit-all-modal .cancel-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#confirm-submit-all-modal .confirm-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#confirm-submit-all-modal .cancel-button {
+    background-color: #f44336;
+    color: white;
+}

@@ -4,6 +4,8 @@ from typing import Dict
 from app.log import logger
 from app.utils.weight_normalizer import WeightNormalizer
 
+logger = logger.getChild(__name__)
+
 
 class SimpleFusion(AbstractFusion):
     def merge_results(self, searcher_results: Dict[str, SearchResult], queries: QueriesStructure) -> Dict[str, FrameMetadataModel]:
@@ -17,16 +19,20 @@ class SimpleFusion(AbstractFusion):
         logger.info(f'Weights normalizer: {weights}')
 
         base_k = 60
-
+        logger.debug(f'Simple fusion results before: {searcher_results}')
         for searcher_name, result in searcher_results.items():
             for rank, frame in enumerate(result.frames, start=1):
-                if frame.id not in merged:
-                    merged[frame.id] = frame.model_copy(deep=True)
-                    merged[frame.id].score = Score(value=0.0, details={})
-                merged[frame.id].score.details[searcher_name] = {
+                idx = frame.keyframe.frame_index
+                if idx not in merged:
+                    merged[idx] = frame.model_copy(deep=True)
+                    merged[idx].score = Score(value=0.0, details={})
+                merged[idx].score.details[searcher_name] = {
                     'rank': rank,
                     'score': frame.score.value if frame.score else 0.0
                 }
+        
+        if not merged:
+            return {}
 
         for frame in merged.values():
             rrf_score = sum(

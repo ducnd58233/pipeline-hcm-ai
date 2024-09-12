@@ -7,6 +7,9 @@ from app.utils.data_manager.grid_manager import grid_manager
 from app.log import logger
 from app.models import Category
 
+logger = logger.getChild(__name__)
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 current_selected_category: Optional[Category] = None

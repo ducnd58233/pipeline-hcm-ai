@@ -1,0 +1,14 @@
+<div id="weight-adjuster-{{id}}" class="weight-adjuster">
+    <div class="weight-label">
+        <label for="weight-{{id}}">{{label}}: <span id="weight-value-{{id}}">{{value}}%</span></label>
+    </div>
+    <div class="weight-inputs">
+        <input type="range" id="weight-{{id}}" name="weight-{{id}}" min="0" max="100" value="{{value}}"
+            hx-post="/update_weight" hx-trigger="input changed delay:500ms, release" hx-target="#weight-adjuster-{{id}}"
+            hx-include="this, #weight-input-{{id}}, #id-{{id}}" hx-swap="outerHTML">
+        <input type="number" id="weight-input-{{id}}" name="weight_input" min="0" max="100" value="{{value}}"
+            hx-post="/update_weight" hx-trigger="input changed delay:500ms, blur" hx-target="#weight-adjuster-{{id}}"
+            hx-include="this, #weight-{{id}}, #id-{{id}}" hx-swap="outerHTML">
+        <input type="hidden" id="id-{{id}}" name="id" value="{{id}}">
+    </div>
+</div>

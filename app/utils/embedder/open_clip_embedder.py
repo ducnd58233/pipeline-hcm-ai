@@ -2,13 +2,16 @@ import numpy as np
 import torch
 from typing import Optional, Tuple
 from open_clip import create_model_and_transforms, get_tokenizer
+from app.log import logger
 
 from .abstract_embedder import AbstractTextEmbedder
 
+logger = logger.getChild(__name__)
 
 class OpenClipEmbedder(AbstractTextEmbedder):
     def __init__(self, model_name: str = 'ViT-L-14', pretrained: str = 'datacomp_xl_s13b_b90k', feature_shape: Optional[Tuple[int, ...]] = None):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        # self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cpu"
         self.model, _, _ = create_model_and_transforms(
             model_name, device=self.device, pretrained=pretrained)
         self.model.eval()
@@ -20,4 +23,13 @@ class OpenClipEmbedder(AbstractTextEmbedder):
         text_tokens = self.tokenizer([text]).to(self.device)
         text_features = self.model.encode_text(text_tokens)
         embedding = text_features.cpu().numpy()[0]
-        return self.resize_embedding(embedding, self.feature_shape)
+        logger.debug(f"Raw embedding shape: {embedding.shape}")
+        logger.debug(f"Raw embedding: {embedding}")
+
+        resized_embedding = self.resize_embedding(
+            embedding, self.feature_shape)
+
+        logger.debug(f"Resized embedding shape: {resized_embedding.shape}")
+        logger.debug(f"Resized embedding: {resized_embedding}")
+
+        return resized_embedding

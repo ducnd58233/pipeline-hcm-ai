@@ -6,6 +6,7 @@ from app.services.fusion.abstract_fusion import AbstractFusion
 from app.services.reranker.abstract_reranker import AbstractReranker
 from app.log import logger
 
+logger = logger.getChild(__name__)
 
 class SearchService:
     def __init__(self,
@@ -39,10 +40,12 @@ class SearchService:
                 searcher_results['text'] = results[0]
             if queries.object_detection_searcher:
                 searcher_results['object'] = results[-1]
+                
+            logger.debug(f'Found: {searcher_results}')
 
             merged_results = self.fusion.merge_results(
                 searcher_results, queries)
-
+            
             text_query = queries.text_searcher.query.query if queries.text_searcher else None
             object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
             final_results = self.reranker.rerank(

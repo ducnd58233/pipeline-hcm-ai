@@ -1,0 +1,12 @@
+<div class="weight-adjusters">
+    <div class="weight-adjuster-container">
+        {% with id='text', label='Text Weight', value=text_weight %}
+        {% include 'components/weight_adjuster.html' %}
+        {% endwith %}
+    </div>
+    <div class="weight-adjuster-container">
+        {% with id='object', label='Object Weight', value=object_weight %}
+        {% include 'components/weight_adjuster.html' %}
+        {% endwith %}
+    </div>
+</div>

@@ -30,7 +30,7 @@ logging_config = {
         "file": {
             "class": "logging.FileHandler",
             "formatter": "default",
-            "level": "INFO",
+            "level": "DEBUG",
             "filename": "app.log",
         },
     },

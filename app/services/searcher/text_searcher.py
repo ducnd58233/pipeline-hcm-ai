@@ -1,3 +1,4 @@
+import numpy as np
 from app.services.searcher.abstract_searcher import AbstractSearcher
 from app.models import Score, SearchResult, FrameMetadataModel, TextQuery
 from app.utils.data_manager.frame_data_manager import frame_data_manager
@@ -5,7 +6,7 @@ from app.utils.query_vectorizer.text_vectorizer import TextQueryVectorizer
 from app.utils.indexer import FaissIndexer
 from typing import List, Dict
 from app.log import logger
-import numpy as np
+logger = logger.getChild(__name__)
 
 
 class TextSearcher(AbstractSearcher):
@@ -16,18 +17,13 @@ class TextSearcher(AbstractSearcher):
     async def search(self, query: TextQuery, page: int, per_page: int) -> SearchResult:
         logger.info(f"Performing text search with query: {query.query}")
 
-        query_structure = await self.vectorizer.parse_query(query.query)
+        similar_frames = await self.search_similar_frames(query.query, top_k=per_page*page + 50)
+        
+        if not similar_frames:
+            logger.warning("No similar frames found for the given query.")
+            return SearchResult(frames=[], total=0, page=page, has_more=False)
 
-        all_results: Dict[int, Dict] = {}
-        for part in query_structure:
-            if isinstance(part, list):
-                part_query = " ".join(part)
-                similar_frames = await self.search_similar_frames(part_query, top_k=per_page*page)
-                self.increase_scores(all_results, similar_frames)
-
-        self.rescale_scores(all_results)
-
-        sorted_results = sorted(all_results.values(),
+        sorted_results = sorted(similar_frames,
                                 key=lambda x: x['similarity'], reverse=True)
 
         start = (page - 1) * per_page
@@ -39,20 +35,27 @@ class TextSearcher(AbstractSearcher):
                 result['frame_index'])
             if frame:
                 frame.score = Score(value=float(result['similarity']), details={
-                                    'text': float(result['similarity']), 'match_count': result['match_count']})
+                                    'text': float(result['similarity'])})
                 result_frames.append(frame)
+
+        total_results = len(sorted_results)
+        logger.debug(f"Retrieved {total_results} frames")
 
         return SearchResult(
             frames=result_frames,
-            total=len(sorted_results),
+            total=total_results,
             page=page,
-            has_more=end < len(sorted_results)
+            has_more=end < total_results
         )
 
     async def search_similar_frames(self, query: str, top_k: int = 5) -> List[dict]:
         query_vector = await self.vectorizer.vectorize(query)
 
         distances, indices = self.indexer.search(query_vector, k=top_k)
+        if np.all(indices[0] == -1):
+            logger.warning(
+                "All search indices are -1. This might indicate an issue with the index or the query vector.")
+            return []
 
         results = []
         for idx, distance in zip(indices[0], distances[0]):
@@ -64,25 +67,25 @@ class TextSearcher(AbstractSearcher):
 
         return results
 
-    def increase_scores(self, all_results: Dict[int, Dict], new_results: List[Dict]):
-        for result in new_results:
-            frame_index = result['frame_index']
-            if frame_index in all_results:
-                all_results[frame_index]['similarity'] += result['similarity']
-                all_results[frame_index]['match_count'] += 1
-            else:
-                result['match_count'] = 1
-                all_results[frame_index] = result
+    # def increase_scores(self, all_results: Dict[int, Dict], new_results: List[Dict]):
+    #     for result in new_results:
+    #         frame_index = result['frame_index']
+    #         if frame_index in all_results:
+    #             all_results[frame_index]['similarity'] += result['similarity']
+    #             all_results[frame_index]['match_count'] += 1
+    #         else:
+    #             result['match_count'] = 1
+    #             all_results[frame_index] = result
 
-    def rescale_scores(self, all_results: Dict[int, Dict]):
-        scores = [result['similarity'] for result in all_results.values()]
-        min_score = min(scores)
-        max_score = max(scores)
+    # def rescale_scores(self, all_results: Dict[int, Dict]):
+    #     scores = [result['similarity'] for result in all_results.values()]
+    #     min_score = min(scores)
+    #     max_score = max(scores)
 
-        if max_score > min_score:
-            for result in all_results.values():
-                result['similarity'] = (
-                    result['similarity'] - min_score) / (max_score - min_score)
-        else:
-            for result in all_results.values():
-                result['similarity'] = 1.0
+    #     if max_score > min_score:
+    #         for result in all_results.values():
+    #             result['similarity'] = (
+    #                 result['similarity'] - min_score) / (max_score - min_score)
+    #     else:
+    #         for result in all_results.values():
+    #             result['similarity'] = 1.0

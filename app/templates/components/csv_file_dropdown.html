@@ -1,0 +1,13 @@
+<div class="csv-file-selection">
+    <select name="file_name" id="file_name">
+        <option value="">Select existing file</option>
+        {% for file in existing_files %}
+        <option value="{{ file }}">{{ file }}</option>
+        {% endfor %}
+    </select>
+    <div class="new-file-input">
+        <input type="text" name="new_file_name" id="new_file_name" placeholder="New file name">
+        <input type="checkbox" name="new_file" id="new_file" value="true">
+        <label for="new_file">Create new file</label>
+    </div>
+</div>

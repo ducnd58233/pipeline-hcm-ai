@@ -3,6 +3,7 @@ from app.models import Category, ObjectDetection, ObjectDetectionItem
 from .visual_encoding_manager import VisualEncodingManager
 from app.log import logger
 
+logger = logger.getChild(__name__)
 
 class ObjectDetectionManager:
     def __init__(self, visual_encoding_manager: VisualEncodingManager):

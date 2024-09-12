@@ -4,6 +4,7 @@ import numpy as np
 from app.log import logger
 from app.models import Category, ObjectDetectionItem
 
+logger = logger.getChild(__name__)
 
 class VisualEncodingManager:
     def __init__(self, classes: List[str]):
