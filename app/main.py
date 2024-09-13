@@ -15,7 +15,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/keyframes", StaticFiles(directory=Config.KEYFRAMES_DIR),
           name="keyframes")
-app.mount("/videos", StaticFiles(directory=Config.VIDEOS_DIR), name="videos")
+# app.mount("/videos", StaticFiles(directory=Config.VIDEOS_DIR), name="videos")
 
 app.add_middleware(
     CORSMiddleware,

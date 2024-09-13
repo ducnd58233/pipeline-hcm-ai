@@ -43,6 +43,7 @@ class Category(str, Enum):
     FIRE_HYDRANT = "fire hydrant"
     FORK = "fork"
     FRISBEE = "frisbee"
+    GIRAFFE = "giraffe"
     HAIR_DRIER = "hair drier"
     HANDBAG = "handbag"
     HORSE = "horse"
@@ -77,6 +78,7 @@ class Category(str, Enum):
     TEDDY_BEAR = "teddy bear"
     TENNIS_RACKET = "tennis racket"
     TIE = "tie"
+    TOASTER = "toaster"
     TOILET = "toilet"
     TOOTHBRUSH = "toothbrush"
     TRAFFIC_LIGHT = "traffic light"
@@ -188,7 +190,7 @@ class KeyframeInfo(BaseModel):
     shot_start: int
     shot_end: int
     timestamp: float
-    video_path: str
+    # video_path: str
     frame_path: str
     width: int
     height: int
@@ -225,8 +227,8 @@ class FrameMetadataModel(BaseModel):
     def get_corrected_frame_path(self) -> str:
         return f"{self.keyframe.frame_path}"
 
-    def get_corrected_video_path(self) -> str:
-        return f"videos/{self.keyframe.video_path}"
+    # def get_corrected_video_path(self) -> str:
+    #     return f"videos/{self.keyframe.video_path}"
 
     def get_frame_info(self) -> Tuple[str, int]:
         frame_part = self.id.split('_')

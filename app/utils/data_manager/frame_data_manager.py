@@ -66,7 +66,7 @@ class FrameDataManager:
             frame_key, object_detection_data, (keyframe.width, keyframe.height))
         frame_metadata = FrameMetadataModel(id=frame_key,keyframe=keyframe, detection=detection)
         frame_metadata.keyframe.frame_path = frame_metadata.get_corrected_frame_path()
-        frame_metadata.keyframe.video_path = frame_metadata.get_corrected_video_path()
+        # frame_metadata.keyframe.video_path = frame_metadata.get_corrected_video_path()
         logger.debug(f'Frame loaded: {frame_metadata}')
         return frame_metadata
 
