@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple
-from app.models import Category, ObjectDetection, ObjectDetectionItem
+from app.models import Category, ObjectDetection
 from .visual_encoding_manager import VisualEncodingManager
 from app.log import logger
 
@@ -31,9 +31,7 @@ class ObjectDetectionManager:
                 objects[category] = bbox_detection
                 encoded_detection.extend(
                     [item.encoded_bbox for item in bbox_detection])
-
-            counts = {Category(k): v for k, v in od_info['counts'].items()
-                      if self._get_category(k) in Category.__members__}
+                counts[category] = len(bbox_detection)
 
         logger.debug(f'objects: {objects}, counts: {counts}')
         return ObjectDetection(objects=objects, counts=counts, encoded_detection=' '.join(encoded_detection))

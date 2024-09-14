@@ -9,4 +9,9 @@
         {% include 'components/weight_adjuster.html' %}
         {% endwith %}
     </div>
+    <div class="weight-adjuster-container">
+        {% with id='tag', label='Tag Weight', value=tag_weight %}
+        {% include 'components/weight_adjuster.html' %}
+        {% endwith %}
+    </div>
 </div>

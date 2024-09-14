@@ -13,6 +13,7 @@ class Config:
     METADATA_ENCODED_DIR = f'{BASE_DIR}/notebooks/indexing/metadata_encoded'
     
     OD_ENCODED_DIR = f'{METADATA_ENCODED_DIR}/object_detection'
+    TAG_ENCODED_DIR = f'{METADATA_ENCODED_DIR}/multi_tag'
 
     METADATA_DIR = f'{BASE_DIR}/notebooks'
     FAISS_BIN_PATH = f'{BASE_DIR}/notebooks/indexing/faiss_clipv2_cosine_cpu.bin'

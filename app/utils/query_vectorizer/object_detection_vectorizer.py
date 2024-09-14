@@ -1,7 +1,6 @@
 import os
 import pickle
 from scipy.sparse import load_npz
-from typing import List
 
 from sklearn.metrics.pairwise import cosine_similarity
 from app.utils.query_vectorizer.abstract_query_vectorizer import AbstractQueryVectorizer
