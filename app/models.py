@@ -124,8 +124,13 @@ class TextQuery(BaseModel):
     query: str
 
 
+class TagQuery(BaseModel):
+    query: str
+    entities: List[Tuple[str, str]] = Field(default_factory=list)
+
+
 class Searcher(BaseModel):
-    query: Union[TextQuery, ObjectQuery]
+    query: Union[TextQuery, ObjectQuery, TagQuery]
     weight: float = Field(..., ge=0.0, le=1.0)
 
     @validator('weight')
@@ -138,6 +143,7 @@ class Searcher(BaseModel):
 class QueriesStructure(BaseModel):
     text_searcher: Optional[Searcher] = None
     object_detection_searcher: Optional[Searcher] = None
+    tag_searcher: Optional[Searcher] = None
 
 
 class SearchRequest(BaseModel):
@@ -184,6 +190,10 @@ class ObjectDetection(BaseModel):
     encoded_detection: str = ''
 
 
+class Tag(BaseModel):
+    taggers: List[str]
+
+
 class KeyframeInfo(BaseModel):
     shot_index: int
     frame_index: int
@@ -221,6 +231,7 @@ class FrameMetadataModel(BaseModel):
     id: str
     keyframe: KeyframeInfo
     detection: Optional[ObjectDetection] = None
+    tag: Optional[Tag] = None
     score: Score = Field(default_factory=Score)
     selected: bool = Field(default=False)
 

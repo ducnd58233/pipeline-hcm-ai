@@ -10,8 +10,36 @@
     <div class="frame-info">
         <h3 class="frame-title">Frame ID: {{ frame.id }}</h3>
         {% if frame.score.value is defined %}
-        <p class="frame-description">Similarity Score: {{ frame.score.value|round(4) if frame.score.value is not none
+
+        <h4 class="frame-title">Similarity Score:</h4>
+        <p class="frame-description">{{ frame.score.value|round(4) if frame.score.value is not none
             else 'N/A' }}</p>
+        {% endif %}
+        
+        <h4 class="frame-title">Tags:</h4>
+        {% if frame.tag and frame.tag.taggers %}
+        <p class="frame-description">{{ frame.tag.taggers|join(', ') }}</p>
+        {% else %}
+        <p>No tag detected</p>
+        {% endif %}
+        
+        <h4 class="frame-title">Object Detection:</h4>
+        {% if frame.detection %}
+        <div class="frame-description">
+            {% if frame.detection.encoded_detection %}
+            <p>Encoded: {{ frame.detection.encoded_detection }}</p>
+            {% endif %}
+            <p>Counts:</p>
+            {% if frame.detection.counts %}
+            <ul>
+                {% for category, count in frame.detection.counts.items() %}
+                <li>{{ category.value }}: {{ count }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% else %}
+        <p>No object detected</p>
         {% endif %}
     </div>
     <div class="frame-actions">

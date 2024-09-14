@@ -10,6 +10,7 @@ import faiss
 from app.log import logger
 import numpy as np
 from .object_detection_manager import ObjectDetectionManager
+from .tag_manager import TagManager
 
 logger = logger.getChild(__name__)
 
@@ -26,6 +27,7 @@ class FrameDataManager:
         visual_encoding_manager = VisualEncodingManager(classes)
         self.object_detection_manager = ObjectDetectionManager(
             visual_encoding_manager)
+        self.tag_manager = TagManager()
 
         self._load_frame_data()
         self.faiss_index = self._load_faiss_index()
@@ -41,30 +43,35 @@ class FrameDataManager:
             return [row[0] for row in reader]
 
     def _load_frame_data(self):
-        keyframes_data, object_detection_data = self._load_json_data()
+        keyframes_data, object_detection_data, tag_data = self._load_json_data()
         for idx, (frame_key, frame_info) in enumerate(keyframes_data.items()):
             frame_metadata = self._create_frame_metadata(
-                frame_key, frame_info, object_detection_data)
+                frame_key, frame_info, object_detection_data, tag_data)
             self._add_frame_to_data(idx, frame_key, frame_metadata)
 
         logger.debug(f"Processed {len(self.frame_data)} frames")
 
-    def _load_json_data(self) -> Tuple[Dict, Dict]:
+    def _load_json_data(self) -> Tuple[Dict, Dict, Dict]:
         keyframes_path = os.path.join(
             Config.METADATA_DIR, 'keyframes_metadata.json')
         object_detection_path = os.path.join(
             Config.METADATA_DIR, 'object_extraction_metadata.json')
+        tag_path = os.path.join(Config.METADATA_DIR, 'tag_metadata.json')
         with open(keyframes_path, 'r') as f:
             keyframes_data = json.load(f)
         with open(object_detection_path, 'r') as f:
             object_detection_data = json.load(f)
-        return keyframes_data, object_detection_data
+        with open(tag_path, 'r') as f:
+            tag_data = json.load(f)
+        return keyframes_data, object_detection_data, tag_data
 
-    def _create_frame_metadata(self, frame_key: str, frame_info: Dict, object_detection_data: Dict) -> FrameMetadataModel:
+    def _create_frame_metadata(self, frame_key: str, frame_info: Dict, object_detection_data: Dict, tag_data: Dict) -> FrameMetadataModel:
         keyframe = KeyframeInfo(**frame_info)
         detection = self.object_detection_manager.process_object_detection(
             frame_key, object_detection_data, (keyframe.width, keyframe.height))
-        frame_metadata = FrameMetadataModel(id=frame_key,keyframe=keyframe, detection=detection)
+        tag = self.tag_manager.process_tagging(frame_key, tag_data)
+        frame_metadata = FrameMetadataModel(
+            id=frame_key, keyframe=keyframe, detection=detection, tag=tag)
         frame_metadata.keyframe.frame_path = frame_metadata.get_corrected_frame_path()
         # frame_metadata.keyframe.video_path = frame_metadata.get_corrected_video_path()
         logger.debug(f'Frame loaded: {frame_metadata}')

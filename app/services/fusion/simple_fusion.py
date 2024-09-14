@@ -12,7 +12,8 @@ class SimpleFusion(AbstractFusion):
         merged = {}
         weights = {
             'text': queries.text_searcher.weight if queries.text_searcher else 0,
-            'object': queries.object_detection_searcher.weight if queries.object_detection_searcher else 0
+            'object': queries.object_detection_searcher.weight if queries.object_detection_searcher else 0,
+            'tag': queries.text_searcher.weight if queries.text_searcher else 0,
         }
 
         weights = WeightNormalizer.normalize(weights)
