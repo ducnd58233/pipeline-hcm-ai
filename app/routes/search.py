@@ -1,3 +1,6 @@
+import csv
+import os
+from typing import List
 from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
@@ -31,24 +34,26 @@ text_embedder = OpenClipEmbedder(
     model_name=Config.CLIP_MODEL_NAME, feature_shape=feature_shape)
 text_processor = TextProcessor()
 
-text_query_vectorizer = TextQueryVectorizer(text_embedder, text_processor)
+text_query_vectorizer = TextQueryVectorizer(
+    text_embedder, text_processor, indexer)
 tag_query_vectorizer = TagQueryVectorizer(text_processor)
 object_detection_vectorizer = ObjectQueryVectorizer()
 
-text_searcher = TextSearcher(text_query_vectorizer, indexer)
+text_searcher = TextSearcher(text_query_vectorizer)
 tag_searcher = TagSearcher(tag_query_vectorizer)
 object_detection_searcher = ObjectDetectionSearcher(
     object_detection_vectorizer)
 
 searchers = {
     'text': text_searcher,
-    'object': object_detection_searcher
+    'object': object_detection_searcher,
+    'tag': tag_searcher,
 }
 fusion = SimpleFusion()
 reranker = SimpleReranker()
 
 search_service = SearchService(
-    text_searcher, object_detection_searcher, tag_searcher, fusion, reranker, text_processor)
+    text_searcher, object_detection_searcher, tag_searcher, fusion, reranker)
 
 weights = {
     'text': 50,
@@ -60,6 +65,20 @@ weight_labels = {
     'object': 'Object Weight',
     'tag': 'Tag Weight',
 }
+
+
+def load_tags_from_csv(file_path: str) -> List[str]:
+    logger.info(f'Loaded tags from: {file_path}')
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)  # Skip header
+        data = sorted([row[0].strip() for row in reader])
+        logger.info(f'Total tags: {len(data)}')
+        return data
+
+
+tags = load_tags_from_csv(os.path.join(Config.TAG_ENCODED_DIR, 'tags.csv'))
+
 
 @router.get("/weight_adjusters", response_class=HTMLResponse)
 async def get_weight_adjusters(request: Request):
@@ -101,29 +120,73 @@ async def update_weight(request: Request):
         raise HTTPException(status_code=422, detail="Invalid input data")
 
 
+@router.post("/add_tag", response_class=HTMLResponse)
+async def add_tag(request: Request, selected_tags: List[str] = Form(...)):
+    return templates.TemplateResponse("components/selected_tags.html", {"request": request, "selected_tags": selected_tags})
+
+
+@router.post("/remove_tag", response_class=HTMLResponse)
+async def remove_tag(request: Request, tag: str = Form(...), selected_tags: List[str] = Form(...)):
+    updated_tags = [t for t in selected_tags if t != tag]
+    return templates.TemplateResponse("components/selected_tags.html", {"request": request, "selected_tags": updated_tags})
+
+
+@router.get("/tag_search", response_class=HTMLResponse)
+async def tag_search(
+    request: Request,
+    search: str = Query(None),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=100)
+):
+    filtered_tags = [tag for tag in tags if search.lower()
+                     in tag.lower()] if search else tags
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_tags = filtered_tags[start:end]
+
+    return templates.TemplateResponse("components/tag_search.html", {
+        "request": request,
+        "tags": paginated_tags,
+        "search": search,
+        "page": page,
+        "per_page": per_page,
+        "total": len(filtered_tags),
+        "has_more": end < len(filtered_tags)
+    })
+
+
 @router.post("/search", response_class=HTMLResponse)
 @router.get("/search", response_class=HTMLResponse)
 async def search(
     request: Request,
     text_query: str = Query(""),
+    selected_tags: List[str] = Query([]),
+    use_tag_inference: bool = Query(False),
     page: int = Query(1, ge=1),
     per_page: int = Query(200, ge=1, le=500)
 ):
     try:
-        queries = QueriesStructure(
-            text_searcher=Searcher(query=TextQuery(
-                query=text_query), weight=weights['text']/100) if text_query else None,
-            object_detection_searcher=None,
-            tag_searcher=Searcher(query=TagQuery(
-                query=text_query), weight=weights['tag']/100) if text_query else None,
-        )
+        translated_query = ""
+        if text_query:
+            translated_query = await text_processor.translate_to_english(text_query)
+            logger.info(
+                f"Translated query: '{text_query}' to '{translated_query}'")
 
         object_query = ObjectQuery()
         object_query.objects = grid_manager.get_state()
 
-        if object_query.objects:
-            queries.object_detection_searcher = Searcher(
-                query=object_query, weight=weights['object'] / 100)
+        tag_query = TagQuery(query="", entities=selected_tags)
+        if use_tag_inference and translated_query:
+            tag_query.query = translated_query
+
+        queries = QueriesStructure(
+            text_searcher=Searcher(query=TextQuery(
+                query=translated_query), weight=weights['text']/100) if translated_query else None,
+            object_detection_searcher=Searcher(
+                query=object_query, weight=weights['object']/100) if object_query.objects else None,
+            tag_searcher=Searcher(query=tag_query, weight=weights['tag']/100) if (
+                selected_tags or (use_tag_inference and translated_query)) else None,
+        )
 
         search_request = SearchRequest(
             queries=queries,
@@ -133,16 +196,19 @@ async def search(
 
         logger.info(
             f"Searching with queries: {search_request.queries}, page: {page}")
-        results = await search_service.search(search_request.queries, page=page, per_page=per_page)
+        results = await search_service.search(search_request.queries, use_tag_inference, page=page, per_page=per_page)
         logger.info(f"Found: {len(results.frames)} results")
 
         context = {
             "request": request,
             "results": results.frames if results else [],
-            "text_query": queries.text_searcher.query.query if queries.text_searcher else "",
+            "text_query": text_query,
+            "selected_tags": selected_tags,
+            "use_tag_inference": use_tag_inference,
             "object_query": grid_manager.get_state(),
             "text_weight": weights['text'] / 100,
             "object_weight": weights['object'] / 100,
+            "tag_weight": weights['tag'] / 100,
             "page": page,
             "per_page": per_page,
             "total": results.total if results else 0,

@@ -1,6 +1,26 @@
 <form id="search-form" hx-get="/search" hx-target="#search-results" hx-indicator=".htmx-indicator"
     hx-on="htmx:beforeRequest:document.getElementById('search-results').innerHTML = '';">
-    <input type="text" name="text_query" placeholder="Enter your search query">
+    <h4>Text search:</h4>
+    <input type="text" name="text_query" placeholder="Enter text query...">
+
+    <h4>Tags selected:</h4>
+    <div id="selected-tags"></div>
+
+    <h4>Tags list:</h4>
+    <input type="text" name="tag_search" placeholder="Search tags..." hx-get="/tag_search"
+        hx-trigger="keyup changed delay:500ms" hx-target="#tag-list">
+    <div id="tag-list" hx-get="/tag_search" hx-trigger="load"></div>
+
+    <div class="use-tag-inference">
+        <label>
+            <input type="checkbox" name="use_tag_inference" value="true">
+            Use Tag Inference
+        </label>
+    </div>
+
     <button type="submit" hx-on="htmx:configRequest" class="submit-button">Search</button>
-    <div class="htmx-indicator">Searching...</div>
+
+    <div class="htmx-indicator">
+        Searching...
+    </div>
 </form>

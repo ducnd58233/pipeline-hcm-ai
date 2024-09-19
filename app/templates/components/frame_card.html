@@ -20,7 +20,7 @@
         {% if frame.tag and frame.tag.taggers %}
         <p class="frame-description">{{ frame.tag.taggers|join(', ') }}</p>
         {% else %}
-        <p>No tag detected</p>
+        <p class="frame-description">No tag detected</p>
         {% endif %}
         
         <h4 class="frame-title">Object Detection:</h4>
@@ -39,7 +39,7 @@
             {% endif %}
         </div>
         {% else %}
-        <p>No object detected</p>
+        <p class="frame-description">No object detected</p>
         {% endif %}
     </div>
     <div class="frame-actions">

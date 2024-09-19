@@ -1,0 +1,18 @@
+<div class="tag-list">
+    {% for tag in tags %}
+    <span class="tag">
+        <label>
+            <input type="checkbox" name="selected_tags" value="{{ tag }}" hx-post="/add_tag" hx-target="#selected-tags"
+                hx-swap="innerHTML">
+            {{ tag }}
+        </label>
+    </span>
+    {% endfor %}
+</div>
+
+{% if has_more %}
+<button class="load-more-btn" hx-get="/tag_search?search={{ search }}&page={{ page + 1 }}&per_page={{ per_page }}"
+    hx-target=".tag-list" hx-swap="beforeend">
+    Load More Tags
+</button>
+{% endif %}
