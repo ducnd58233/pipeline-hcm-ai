@@ -1,11 +1,13 @@
 import asyncio
 from typing import List, Optional, Dict
 from app.models import SearchResult, FrameMetadataModel, QueriesStructure, TextQuery
+
 from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
 from app.services.searcher.tag_searcher import TagSearcher
 from app.services.searcher.text_searcher import TextSearcher
 from app.services.fusion.abstract_fusion import AbstractFusion
 from app.services.reranker.abstract_reranker import AbstractReranker
+from app.utils.search_processor import TextProcessor
 from app.log import logger
 
 logger = logger.getChild(__name__)
@@ -24,6 +26,7 @@ class SearchService:
         self.object_detection_searcher = object_detection_searcher
         self.fusion = fusion
         self.reranker = reranker
+        self.text_processor = text_processor
 
     async def search(self, queries: QueriesStructure, use_tag_inference: bool, page: int = 1, per_page: int = 20, boost_factors: Optional[Dict[str, float]] = None) -> SearchResult:
         try:
@@ -34,12 +37,21 @@ class SearchService:
                 logger.warning("No active queries provided.")
                 return SearchResult(frames=[], total=0, page=page, has_more=False)
 
+            if queries.text_searcher:
+                original_query = queries.text_searcher.query.query
+                translated_query = await self.text_processor.translate_to_english(original_query)
+                queries.text_searcher.query.query = translated_query
+                logger.info(
+                    f"Translated query: '{original_query}' to '{translated_query}'")
+
             search_tasks = []
             searcher_results = {}
 
             if queries.text_searcher:
                 search_tasks.append(self.text_searcher.search(
                     queries.text_searcher.query, page=page, per_page=page*per_page))
+                search_tasks.append(self.tag_searcher.search(
+                    queries.text_searcher.query, page=page, per_page=page*per_page, boost_factors=boost_factors))
 
             if queries.tag_searcher:
                 search_tasks.append(self.tag_searcher.search(
@@ -66,6 +78,7 @@ class SearchService:
                 searcher_results, queries)
 
             text_query = queries.text_searcher.query if queries.text_searcher else None
+
             object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
             final_results = self.reranker.rerank(
                 merged_results, text_query, object_query)
