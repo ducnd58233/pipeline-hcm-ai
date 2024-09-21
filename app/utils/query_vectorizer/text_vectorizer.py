@@ -25,7 +25,7 @@ class TextQueryVectorizer(AbstractQueryVectorizer):
         logger.debug(f"Final query vector shape: {embedding.shape}")
         logger.debug(f"Final query vector: {embedding}")
 
-        return embedding
+        return embedding, entities
 
     async def preprocess_query(self, query: str) -> str:
         return await self.text_processor.preprocess_query(query)
@@ -41,3 +41,4 @@ class TextQueryVectorizer(AbstractQueryVectorizer):
         distances, indices = self.faiss_index.search(query_vector, k)
 
         return distances.flatten(), indices.flatten()
+

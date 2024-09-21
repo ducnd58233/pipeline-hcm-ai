@@ -2,6 +2,7 @@ from typing import List
 from fastapi import APIRouter, Form, Query, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+
 from app.models import FrameMetadataModel, ObjectQuery, QueriesStructure, SearchRequest, Searcher, TagQuery, TextQuery
 from app.services.fusion.simple_fusion import SimpleFusion
 from app.services.reranker.simple_reranker import SimpleReranker
@@ -42,6 +43,7 @@ object_detection_vectorizer = ObjectQueryVectorizer()
 
 text_searcher = TextSearcher(text_query_vectorizer)
 text_searcher_v2 = TextSearcherV2(text_query_vectorizer)
+
 tag_searcher = TagSearcher(tag_query_vectorizer)
 object_detection_searcher = ObjectDetectionSearcher(
     object_detection_vectorizer)
