@@ -2,7 +2,6 @@ from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import Optional
-from app.utils.data_manager.grid_manager import grid_manager
 from app.utils.data_manager.frame_data_manager import frame_data_manager
 from app.services.csv_service import (
     save_single_frame_to_csv, get_existing_csv_files, create_new_csv_file,

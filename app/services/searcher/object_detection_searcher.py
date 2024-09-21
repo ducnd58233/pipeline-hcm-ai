@@ -24,27 +24,17 @@ class ObjectDetectionSearcher(AbstractSearcher):
 
         sorted_results = sorted(similar_frames,
                                 key=lambda x: x['similarity'], reverse=True)
-        start = (page - 1) * per_page
-        end = start + per_page
-
-        result_frames: List[FrameMetadataModel] = []
-        for result in sorted_results:
-            frame = frame_data_manager.get_frame_by_key(result['frame_id'])
-            if frame:
-                frame.score = Score(value=float(result['similarity']), details={
-                                    'object': float(result['similarity'])})
-                result_frames.append(frame)
-            else:
-                logger.warning(f"Frame not found for id: {result['frame_id']}")
+        result_frames = self.prepare_result_frames(
+            sorted_results, page, per_page)
 
         total_results = len(sorted_results)
         logger.debug(f"Retrieved {total_results} frames")
-        
+
         return SearchResult(
             frames=result_frames,
             total=total_results,
             page=page,
-            has_more=end < total_results
+            has_more=len(result_frames) == per_page
         )
 
     async def search_similar_frames(self, query: ObjectQuery, top_k: int = 5) -> List[Dict[str, float]]:
@@ -58,13 +48,31 @@ class ObjectDetectionSearcher(AbstractSearcher):
             if similarities[idx] <= 0:
                 continue
 
-            frame_id = frame_data_manager.index_to_frame_key.get(int(idx))
-            if frame_id:
-                results.append({
-                    'frame_id': frame_id,
-                    'similarity': float(similarities[idx])
-                })
-            else:
-                logger.warning(f"No frame_id found for index {idx}")
+            results.append({
+                'frame_index': int(idx),
+                'similarity': float(similarities[idx])
+            })
 
         return results
+    
+    def prepare_result_frames(self, sorted_results: List[Dict[str, float]], page: int, per_page: int) -> List[FrameMetadataModel]:
+        start = (page - 1) * per_page
+        end = start + per_page
+
+        result_frames = []
+        
+        start = (page - 1) * per_page
+        end = start + per_page
+
+        result_frames: List[FrameMetadataModel] = []
+        for result in sorted_results[start:end]:
+            frame = frame_data_manager.get_frame_by_index(
+                result['frame_index'])
+            if frame:
+                frame.score = Score(value=float(result['similarity']), details={
+                                    'object': float(result['similarity'])})
+                result_frames.append(frame)
+            else:
+                logger.warning(f"Frame not found for id: {result['frame_id']}")
+
+        return result_frames

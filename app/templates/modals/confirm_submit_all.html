@@ -1,6 +1,9 @@
 <div id="confirm-submit-all-modal" class="modal">
     <div class="modal-content">
-        <h2>Confirm Submission</h2>
+        <div class="modal-header">
+            <h2>Confirm Submission</h2>
+            <button class="close-button" hx-target="#modal-container" hx-get="/close_modal">&times;</button>
+        </div>
         <p>Are you sure you want to submit all {{ frame_count }} selected frames?</p>
 
         <form hx-post="/confirm_submit_all" hx-target="body">
