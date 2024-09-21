@@ -126,8 +126,7 @@ class TextQuery(BaseModel):
 
 class TagQuery(BaseModel):
     query: str
-    entities: List[str] = Field(default_factory=list)
-
+    entities: List[Tuple[str, str]] = Field(default_factory=list)
 
 
 class Searcher(BaseModel):
