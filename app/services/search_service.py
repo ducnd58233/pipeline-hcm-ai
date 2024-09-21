@@ -1,10 +1,7 @@
 import asyncio
 from typing import List, Optional, Dict
 from app.models import SearchResult, FrameMetadataModel, QueriesStructure, TextQuery
-
-from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
-from app.services.searcher.tag_searcher import TagSearcher
-from app.services.searcher.text_searcher import TextSearcher
+from app.services.searcher.abstract_searcher import AbstractSearcher
 from app.services.fusion.abstract_fusion import AbstractFusion
 from app.services.reranker.abstract_reranker import AbstractReranker
 from app.utils.search_processor import TextProcessor
@@ -15,12 +12,12 @@ logger = logger.getChild(__name__)
 
 class SearchService:
     def __init__(self,
-                 text_searcher: TextSearcher,
-                 object_detection_searcher: ObjectDetectionSearcher,
-                 tag_searcher: TagSearcher,
+                 text_searcher: AbstractSearcher,
+                 object_detection_searcher: AbstractSearcher,
+                 tag_searcher: AbstractSearcher,
                  fusion: AbstractFusion,
                  reranker: AbstractReranker,
-                 ):
+                 text_processor: TextProcessor):
         self.text_searcher = text_searcher
         self.tag_searcher = tag_searcher
         self.object_detection_searcher = object_detection_searcher
@@ -28,14 +25,10 @@ class SearchService:
         self.reranker = reranker
         self.text_processor = text_processor
 
-    async def search(self, queries: QueriesStructure, use_tag_inference: bool, page: int = 1, per_page: int = 20, boost_factors: Optional[Dict[str, float]] = None) -> SearchResult:
+    async def search(self, queries: QueriesStructure, page: int = 1, per_page: int = 20, boost_factors: Optional[Dict[str, float]] = None) -> SearchResult:
         try:
             logger.info(
-                f"Performing search for queries: {queries}, use_tag_inference: {use_tag_inference}, page: {page}, per_page: {per_page}")
-
-            if not queries.text_searcher and not queries.tag_searcher and not queries.object_detection_searcher:
-                logger.warning("No active queries provided.")
-                return SearchResult(frames=[], total=0, page=page, has_more=False)
+                f"Performing search for queries: {queries}, page: {page}, per_page: {per_page}")
 
             if queries.text_searcher:
                 original_query = queries.text_searcher.query.query
@@ -45,17 +38,11 @@ class SearchService:
                     f"Translated query: '{original_query}' to '{translated_query}'")
 
             search_tasks = []
-            searcher_results = {}
-
             if queries.text_searcher:
                 search_tasks.append(self.text_searcher.search(
                     queries.text_searcher.query, page=page, per_page=page*per_page))
                 search_tasks.append(self.tag_searcher.search(
                     queries.text_searcher.query, page=page, per_page=page*per_page, boost_factors=boost_factors))
-
-            if queries.tag_searcher:
-                search_tasks.append(self.tag_searcher.search(
-                    queries.tag_searcher.query, page=page, per_page=page*per_page, boost_factors=boost_factors))
 
             if queries.object_detection_searcher:
                 search_tasks.append(self.object_detection_searcher.search(
@@ -63,22 +50,19 @@ class SearchService:
 
             results = await asyncio.gather(*search_tasks)
 
+            searcher_results = {}
             if queries.text_searcher:
-                searcher_results['text'] = results.pop(0)
-
-            if queries.tag_searcher:
-                searcher_results['tag'] = results.pop(0)
-
+                searcher_results['text'] = results[0]
+                searcher_results['tag'] = results[1]
             if queries.object_detection_searcher:
-                searcher_results['object'] = results.pop(0)
+                searcher_results['object'] = results[-1]
 
             logger.debug(f'Found: {searcher_results}')
 
             merged_results = self.fusion.merge_results(
                 searcher_results, queries)
 
-            text_query = queries.text_searcher.query if queries.text_searcher else None
-
+            text_query = queries.text_searcher.query.query if queries.text_searcher else None
             object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
             final_results = self.reranker.rerank(
                 merged_results, text_query, object_query)

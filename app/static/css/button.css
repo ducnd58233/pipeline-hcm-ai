@@ -45,17 +45,6 @@
     box-shadow: 0 4px 8px rgba(231, 76, 60, 0.5);
 }
 
-.close-button {
-    background-color: #e74c3c;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-}
-
-
 .button:active {
     transform: translateY(2px);
     box-shadow: none;
