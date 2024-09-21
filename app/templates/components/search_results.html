@@ -3,15 +3,26 @@
     {% for frame in results %}
     {% include 'components/frame_card.html' %}
     {% endfor %}
-
     {% else %}
-    <p class="text-center text-gray-600 text-lg">No results found for "{{ text_query }}"</p>
+    <p>No results found for
+        {% if text_query %}
+        text query: "{{ text_query }}"
+        {% endif %}
+        {% if selected_tags %}
+        {% if text_query %} and {% endif %}
+        tags: "{{ selected_tags|join(', ') }}"
+        {% endif %}
+    </p>
     {% endif %}
 </div>
 
 {% if has_more %}
 <div id="infinite-scroll-trigger" hx-get="/search" hx-trigger="revealed" hx-swap="beforeend" hx-target="#search-results"
-    hx-vals='{"text_query": "{{ text_query }}", "text_weight": "{{ text_weight }}", "object_weight": "{{ object_weight }}", "page": "{{ page + 1 }}", "per_page": "{{ per_page }}"}'>
+    hx-vals='{"text_query": "{{ text_query }}", 
+                   "selected_tags": {{ selected_tags|tojson }}, 
+                   "use_tag_inference": {{ use_tag_inference|tojson }},
+                   "page": "{{ page + 1 }}", 
+                   "per_page": "{{ per_page }}"}'>
     <div class="htmx-indicator">
         Loading more results...
     </div>

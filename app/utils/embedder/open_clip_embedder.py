@@ -1,8 +1,10 @@
 import numpy as np
 import torch
+import faiss
 from typing import Optional, Tuple
 from open_clip import create_model_and_transforms, get_tokenizer
 from app.log import logger
+from app.utils.indexer import FaissIndexer
 
 from .abstract_embedder import AbstractTextEmbedder
 
@@ -25,7 +27,11 @@ class OpenClipEmbedder(AbstractTextEmbedder):
         embedding = text_features.cpu().numpy()[0]
         logger.debug(f"Raw embedding shape: {embedding.shape}")
         logger.debug(f"Raw embedding: {embedding}")
-
+        
+        embedding = embedding.reshape(1, -1)
+        faiss.normalize_L2(embedding)
+        embedding = embedding.reshape(-1)
+        
         resized_embedding = self.resize_embedding(
             embedding, self.feature_shape)
 

@@ -1,0 +1,66 @@
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.tag {
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 2px 8px;
+    display: inline-block;
+    background-color: #f8f9fa;
+    font-size: 0.9em;
+}
+
+.tag label {
+    cursor: pointer;
+}
+
+.tag input[type="checkbox"] {
+    display: none;
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.selected-tag {
+    border: 1px solid #007bff;
+    border-radius: 15px;
+    padding: 2px 8px;
+    display: inline-flex;
+    align-items: center;
+    background-color: #e7f1ff;
+    font-size: 0.9em;
+}
+
+.remove-tag-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    margin-left: 5px;
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: 0;
+    line-height: 1;
+}
+
+.load-more-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.load-more-btn:hover {
+    background-color: #0056b3;
+}

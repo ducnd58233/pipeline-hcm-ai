@@ -12,19 +12,17 @@ logger = logger.getChild(__name__)
 class TagSearcher(AbstractSearcher):
     def __init__(self, vectorizer: TagQueryVectorizer):
         self.vectorizer = vectorizer
-        self.default_entity_boost = 1.2
-
     async def search(self, query: TagQuery, page: int, per_page: int, boost_factors: Optional[Dict[str, float]] = None) -> SearchResult:
-        logger.info(f"Performing tag search with query: {query.query}")
+        logger.info(
+            f"Performing tag search with query: {query.query}, additional entities: {query.entities}")
 
-        query_vector, entities = await self.vectorizer.vectorize(query)
+        query_vector, terms = await self.vectorizer.vectorize(query)
         similar_frames = await self.search_similar_frames(query_vector, top_k=per_page*page + 50)
 
         if not similar_frames:
             logger.warning("No similar frames found for the given query.")
             return SearchResult(frames=[], total=0, page=page, has_more=False)
 
-        self.apply_entity_boost(similar_frames, entities)
         self.apply_boost_and_normalize(similar_frames, boost_factors)
 
         sorted_results = sorted(
@@ -60,14 +58,6 @@ class TagSearcher(AbstractSearcher):
                 logger.warning(f"No frame_id found for index {idx}")
 
         return results
-
-    def apply_entity_boost(self, frames: List[Dict[str, float]], entities: List[Tuple[str, str]]):
-        for frame in frames:
-            frame_data = frame_data_manager.get_frame_by_key(frame['frame_id'])
-            if frame_data and frame_data.tag:
-                for entity, _ in entities:
-                    if entity.lower() in [tag.lower() for tag in frame_data.tag.get('taggers', [])]:
-                        frame['similarity'] *= self.default_entity_boost
 
     def apply_boost_and_normalize(self, frames: List[Dict[str, float]], boost_factors: Optional[Dict[str, float]] = None):
         if boost_factors is None:

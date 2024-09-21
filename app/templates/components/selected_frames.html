@@ -3,6 +3,13 @@
         <h2>Total:</h2>
         <span class="frame-count">{{ frames|length }} frame{% if frames|length != 1 %}s{% endif %} selected</span>
     </div>
+    <div class="auto-select-container">
+        <input type="number" id="max-items" name="max_items" value="100" min="1" max="1000">
+        <button hx-post="/auto_select_frames" hx-include="#max-items" hx-target="#selected-frames-container"
+            hx-swap="outerHTML">
+            Auto Select Frames
+        </button>
+    </div>
     <button hx-post="/submit_all_frames" class="submit-button" hx-target="#modal-container">Submit All Frames</button>
 
 
