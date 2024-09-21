@@ -12,6 +12,7 @@ logger = logger.getChild(__name__)
 class TagSearcher(AbstractSearcher):
     def __init__(self, vectorizer: TagQueryVectorizer):
         self.vectorizer = vectorizer
+
     async def search(self, query: TagQuery, page: int, per_page: int, boost_factors: Optional[Dict[str, float]] = None) -> SearchResult:
         logger.info(
             f"Performing tag search with query: {query.query}, additional entities: {query.entities}")

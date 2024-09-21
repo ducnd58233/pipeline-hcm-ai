@@ -129,7 +129,6 @@ class TagQuery(BaseModel):
     entities: List[str] = Field(default_factory=list)
 
 
-
 class Searcher(BaseModel):
     query: Union[TextQuery, ObjectQuery, TagQuery]
     weight: float = Field(..., ge=0.0, le=1.0)

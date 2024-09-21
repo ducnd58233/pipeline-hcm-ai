@@ -89,19 +89,6 @@ class TextProcessor:
         logger.debug(f"Extracted terms: {all_terms}")
         return all_terms
 
-    async def translate_to_english(self, query):
-        try:
-            detected_lang = await asyncio.to_thread(self.translator.detect, query)
-            logger.debug(f"Detected language: {detected_lang.lang}")
-
-            if detected_lang.lang != 'en':
-                translated = await asyncio.to_thread(self.translator.translate, query, dest='en')
-                return translated.text
-            return query
-        except Exception as e:
-            logger.error(f"Translation error: {str(e)}")
-            return query
-
     async def preprocess_query(self, query):
         query = query.strip()
         query = self.tokenize_and_remove_stopwords(query)
@@ -111,9 +98,3 @@ class TextProcessor:
         logger.debug(f'Text before tokenize: {text}')
         tokens = word_tokenize(text.lower())
         return [w for w in tokens if w not in self.stop_words or w.isdigit()]
-
-    def extract_ner(self, text):
-        doc = self.nlp(text)
-        entities = [(ent.text, ent.label_) for ent in doc.ents]
-        logger.debug(f"Extracted entities: {entities}")
-        return entities

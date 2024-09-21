@@ -5,7 +5,6 @@ import numpy as np
 from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 from app.log import logger
-
 from app.models import TagQuery
 from app.utils.query_vectorizer.abstract_query_vectorizer import AbstractQueryVectorizer
 from app.utils.search_processor import TextProcessor
@@ -20,7 +19,6 @@ class TagQueryVectorizer(AbstractQueryVectorizer):
         self.vectors = self.__load_vectors()
         self.text_processor = text_processor
         self.tags_list = tags_list
-
         logger.debug(f'vectorizer: {self.vectorizer}')
         logger.debug(f'vector: {self.vectors}')
 
