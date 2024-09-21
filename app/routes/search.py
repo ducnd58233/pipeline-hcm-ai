@@ -42,6 +42,7 @@ object_detection_vectorizer = ObjectQueryVectorizer()
 
 text_searcher = TextSearcher(text_query_vectorizer)
 text_searcher_v2 = TextSearcherV2(text_query_vectorizer)
+
 tag_searcher = TagSearcher(tag_query_vectorizer)
 object_detection_searcher = ObjectDetectionSearcher(
     object_detection_vectorizer)
@@ -58,7 +59,7 @@ weights = {
     'text': 50,
     'object': 50,
     'tag': 50,
-}
+
 weight_labels = {
     'text': 'Text Weight',
     'object': 'Object Weight',
