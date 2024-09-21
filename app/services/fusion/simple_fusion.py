@@ -8,14 +8,14 @@ logger = logger.getChild(__name__)
 
 
 class SimpleFusion(AbstractFusion):
-    def merge_results(self, searcher_results: Dict[str, SearchResult], queries: QueriesStructure, use_tag_inference: bool) -> Dict[str, FrameMetadataModel]:
+    def merge_results(self, searcher_results: Dict[str, SearchResult], queries: QueriesStructure) -> Dict[str, FrameMetadataModel]:
         merged = self._collect_frames(searcher_results)
 
         if not merged:
             logger.warning("No results to merge.")
             return {}
 
-        weights = self._calculate_weights(queries, use_tag_inference)
+        weights = self._calculate_weights(queries)
         self._calculate_scores(merged, weights)
         self._normalize_scores(merged)
         return merged
@@ -34,12 +34,11 @@ class SimpleFusion(AbstractFusion):
                 }
         return merged
 
-    def _calculate_weights(self, queries: QueriesStructure, use_tag_inference: bool) -> Dict[str, float]:
+    def _calculate_weights(self, queries: QueriesStructure) -> Dict[str, float]:
         weights = {
             'text': queries.text_searcher.weight if queries.text_searcher else 0,
             'object': queries.object_detection_searcher.weight if queries.object_detection_searcher else 0,
             'tag': queries.tag_searcher.weight if queries.tag_searcher else 0,
-            'tag_inference': queries.text_searcher.weight if queries.text_searcher and use_tag_inference else 0,
         }
         return WeightNormalizer.normalize(weights)
 

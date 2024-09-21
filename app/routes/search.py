@@ -1,17 +1,16 @@
-import csv
-import os
 from typing import List
-from fastapi import APIRouter, Depends, Form, Query, Request, HTTPException
+from fastapi import APIRouter, Form, Query, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from app.models import ObjectQuery, QueriesStructure, SearchRequest, Searcher, TagQuery, TextQuery
+from app.models import FrameMetadataModel, ObjectQuery, QueriesStructure, SearchRequest, Searcher, TagQuery, TextQuery
 from app.services.fusion.simple_fusion import SimpleFusion
-from app.services.reranker.sbert_reranker import SentenceBertReranker
 from app.services.reranker.simple_reranker import SimpleReranker
 from app.services.search_service import SearchService
+from app.services.search_service_v2 import SearchServiceV2
 from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
 from app.services.searcher.tag_searcher import TagSearcher
 from app.services.searcher.text_searcher import TextSearcher
+from app.services.searcher.text_searcher_v2 import TextSearcherV2
 from app.log import logger
 from app.utils.embedder.open_clip_embedder import OpenClipEmbedder
 from app.utils.indexer import FaissIndexer
@@ -20,6 +19,8 @@ from app.utils.query_vectorizer.tag_vectorizer import TagQueryVectorizer
 from app.utils.query_vectorizer.text_vectorizer import TextQueryVectorizer
 from app.utils.search_processor import TextProcessor
 from app.utils.data_manager.grid_manager import grid_manager
+from app.utils.data_manager.tag_manager import tags_list
+from app.utils.data_manager.frame_data_manager import frame_data_manager
 from config import Config
 
 logger = logger.getChild(__name__)
@@ -36,24 +37,22 @@ text_processor = TextProcessor()
 
 text_query_vectorizer = TextQueryVectorizer(
     text_embedder, text_processor, indexer)
-tag_query_vectorizer = TagQueryVectorizer(text_processor)
+tag_query_vectorizer = TagQueryVectorizer(text_processor, tags_list)
 object_detection_vectorizer = ObjectQueryVectorizer()
 
 text_searcher = TextSearcher(text_query_vectorizer)
+text_searcher_v2 = TextSearcherV2(text_query_vectorizer)
 tag_searcher = TagSearcher(tag_query_vectorizer)
 object_detection_searcher = ObjectDetectionSearcher(
     object_detection_vectorizer)
 
-searchers = {
-    'text': text_searcher,
-    'object': object_detection_searcher,
-    'tag': tag_searcher,
-}
 fusion = SimpleFusion()
 reranker = SimpleReranker()
 
 search_service = SearchService(
     text_searcher, object_detection_searcher, tag_searcher, fusion, reranker)
+search_service_v2 = SearchServiceV2(
+    text_searcher_v2, object_detection_searcher, tag_searcher, fusion, reranker)
 
 weights = {
     'text': 50,
@@ -66,18 +65,7 @@ weight_labels = {
     'tag': 'Tag Weight',
 }
 
-
-def load_tags_from_csv(file_path: str) -> List[str]:
-    logger.info(f'Loaded tags from: {file_path}')
-    with open(file_path, 'r') as f:
-        reader = csv.reader(f)
-        next(reader)  # Skip header
-        data = sorted([row[0].strip() for row in reader])
-        logger.info(f'Total tags: {len(data)}')
-        return data
-
-
-tags = load_tags_from_csv(os.path.join(Config.TAG_ENCODED_DIR, 'tags.csv'))
+current_results: List[FrameMetadataModel] = []
 
 
 @router.get("/weight_adjusters", response_class=HTMLResponse)
@@ -138,8 +126,8 @@ async def tag_search(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100)
 ):
-    filtered_tags = [tag for tag in tags if search.lower()
-                     in tag.lower()] if search else tags
+    filtered_tags = [tag for tag in tags_list if search.lower()
+                     in tag.lower()] if search else tags_list
     start = (page - 1) * per_page
     end = start + per_page
     paginated_tags = filtered_tags[start:end]
@@ -165,7 +153,11 @@ async def search(
     page: int = Query(1, ge=1),
     per_page: int = Query(200, ge=1, le=500)
 ):
+    global current_results
     try:
+        if page == 1:
+            current_results = []
+
         translated_query = ""
         if text_query:
             translated_query = await text_processor.translate_to_english(text_query)
@@ -197,7 +189,9 @@ async def search(
         logger.info(
             f"Searching with queries: {search_request.queries}, page: {page}")
         results = await search_service.search(search_request.queries, use_tag_inference, page=page, per_page=per_page)
+        # results = await search_service_v2.search(search_request.queries, use_tag_inference, page=page, per_page=per_page)
         logger.info(f"Found: {len(results.frames)} results")
+        current_results.extend(results.frames)
 
         context = {
             "request": request,
@@ -221,3 +215,32 @@ async def search(
         logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail="An error occurred while searching. Please try again later.")
+
+
+@router.post("/auto_select_frames", response_class=HTMLResponse)
+async def auto_select_frames(request: Request, max_items: int = Form(100)):
+    global current_results
+    try:
+        selected_frames = frame_data_manager.get_selected_frames()
+        current_count = len(selected_frames)
+
+        frames_to_select = max(0, min(max_items - current_count, 100))
+
+        for frame in current_results:
+            if frames_to_select == 0:
+                break
+            if not frame.selected:
+                frame_data_manager.toggle_frame_selection(
+                    frame.id, score=frame.final_score)
+                frames_to_select -= 1
+
+        updated_selected_frames = frame_data_manager.get_selected_frames()
+
+        return templates.TemplateResponse("components/selected_frames.html", {
+            "request": request,
+            "frames": updated_selected_frames
+        })
+    except Exception as e:
+        logger.error(f"Error in auto_select_frames: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while auto-selecting frames")

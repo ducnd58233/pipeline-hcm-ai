@@ -1,8 +1,12 @@
 <div id="confirm-modal" class="modal" hx-target="body" hx-swap="outerHTML">
     <div class="modal-content">
-        <h2>Confirm Submission</h2>
-        <p>Are you sure you want to submit this frame?</p>
-
+        <div class="modal-header">
+            <h2>Confirm Submission</h2>
+            <button class="close-button" hx-target="#modal-container" hx-get="/close_modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to submit this frame?</p>
+        </div>
         <div class="modal-actions">
             <button type="submit" hx-post="/confirm_submit_single" hx-vals='{"frame_id": "{{ frame_id }}"}' class="confirm-button">
                 Yes, Submit

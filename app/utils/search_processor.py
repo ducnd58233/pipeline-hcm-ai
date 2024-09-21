@@ -34,7 +34,7 @@ class TextProcessor:
     async def translate_to_english(self, query):
         try:
             detected_lang = await asyncio.to_thread(self.translator.detect, query)
-            logger.debug(f"Detected language: {detected_lang.lang}")
+            logger.info(f"Detected language: {detected_lang.lang}")
 
             if detected_lang.lang != 'en':
                 translated = await asyncio.to_thread(self.translator.translate, query, dest='en')

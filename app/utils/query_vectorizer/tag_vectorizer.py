@@ -14,10 +14,11 @@ logger = logger.getChild(__name__)
 
 
 class TagQueryVectorizer(AbstractQueryVectorizer):
-    def __init__(self, text_processor: TextProcessor):
+    def __init__(self, text_processor: TextProcessor, tags_list: List[str]):
         self.vectorizer = self.__load_vectorizer()
         self.vectors = self.__load_vectors()
         self.text_processor = text_processor
+        self.tags_list = tags_list
         logger.debug(f'vectorizer: {self.vectorizer}')
         logger.debug(f'vector: {self.vectors}')
 
@@ -37,11 +38,12 @@ class TagQueryVectorizer(AbstractQueryVectorizer):
         query_terms = await self.text_processor.extract_relevant_terms(query.query)
         
         all_terms = list(set(query_terms + query.entities))
+        existed_terms = [term for term in all_terms if term in self.tags_list]
         
         logger.info(
-            f'All terms for vectorization: {all_terms}')
-        term_vectors = self.vectorizer.transform([" ".join(all_terms)])
-        return term_vectors, all_terms
+            f'All terms for vectorization: {existed_terms}')
+        term_vectors = self.vectorizer.transform([" ".join(existed_terms)])
+        return term_vectors, existed_terms
 
     def search(self, query_vector, k):
         if query_vector.shape[0] > 1:

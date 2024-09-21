@@ -3,7 +3,7 @@ from typing import List, Optional, Dict
 from app.models import SearchResult, FrameMetadataModel, QueriesStructure, TextQuery
 from app.services.searcher.object_detection_searcher import ObjectDetectionSearcher
 from app.services.searcher.tag_searcher import TagSearcher
-from app.services.searcher.text_searcher import TextSearcher
+from app.services.searcher.text_searcher_v2 import TextSearcherV2
 from app.services.fusion.abstract_fusion import AbstractFusion
 from app.services.reranker.abstract_reranker import AbstractReranker
 from app.log import logger
@@ -11,15 +11,15 @@ from app.log import logger
 logger = logger.getChild(__name__)
 
 
-class SearchService:
+class SearchServiceV2:
     def __init__(self,
-                 text_searcher: TextSearcher,
+                 text_searcher_v2: TextSearcherV2,
                  object_detection_searcher: ObjectDetectionSearcher,
                  tag_searcher: TagSearcher,
                  fusion: AbstractFusion,
                  reranker: AbstractReranker,
                  ):
-        self.text_searcher = text_searcher
+        self.text_searcher_v2 = text_searcher_v2
         self.tag_searcher = tag_searcher
         self.object_detection_searcher = object_detection_searcher
         self.fusion = fusion
@@ -38,16 +38,16 @@ class SearchService:
             searcher_results = {}
 
             if queries.text_searcher:
-                search_tasks.append(self.text_searcher.search(
+                search_tasks.append(self.text_searcher_v2.search(
                     queries.text_searcher.query, page=page, per_page=page*per_page))
 
-            if queries.tag_searcher:
-                search_tasks.append(self.tag_searcher.search(
-                    queries.tag_searcher.query, page=page, per_page=page*per_page, boost_factors=boost_factors))
+            # if queries.tag_searcher:
+            #     search_tasks.append(self.tag_searcher.search(
+            #         queries.tag_searcher.query, page=page, per_page=page*per_page, boost_factors=boost_factors))
 
-            if queries.object_detection_searcher:
-                search_tasks.append(self.object_detection_searcher.search(
-                    queries.object_detection_searcher.query, page=page, per_page=page*per_page))
+            # if queries.object_detection_searcher:
+            #     search_tasks.append(self.object_detection_searcher.search(
+            #         queries.object_detection_searcher.query, page=page, per_page=page*per_page))
 
             results = await asyncio.gather(*search_tasks)
 
@@ -62,34 +62,34 @@ class SearchService:
 
             logger.debug(f'Found: {searcher_results}')
 
-            merged_results = self.fusion.merge_results(
-                searcher_results, queries)
+            # merged_results = self.fusion.merge_results(
+            #     searcher_results, queries, use_tag_inference)
 
-            text_query = queries.text_searcher.query if queries.text_searcher else None
-            object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
-            final_results = self.reranker.rerank(
-                merged_results, text_query, object_query)
+            # text_query = queries.text_searcher.query if queries.text_searcher else None
+            # object_query = queries.object_detection_searcher.query if queries.object_detection_searcher else None
+            # final_results = self.reranker.rerank(
+            #     merged_results, text_query, object_query)
+            final_results = searcher_results['text']
+            # paginated_results = self.__paginate_results(
+            #     final_results, page, per_page)
 
-            paginated_results = self._paginate_results(
-                final_results, page, per_page)
-
-            logger.info(
-                f"Search completed. Total results: {len(final_results)}, Current page: {page}")
-            return paginated_results
+            # logger.info(
+            #     f"Search completed. Total results: {len(final_results)}, Current page: {page}")
+            return final_results
         except Exception as e:
             logger.error(
                 f"Error occurred during search: {str(e)}", exc_info=True)
             raise
 
-    def _paginate_results(self, sorted_results: List[FrameMetadataModel], page: int, per_page: int) -> SearchResult:
-        total_results = len(sorted_results)
-        start_idx = (page - 1) * per_page
-        end_idx = start_idx + per_page
-        paged_frames = sorted_results[start_idx:end_idx]
+    # def __paginate_results(self, sorted_results: List[FrameMetadataModel], page: int, per_page: int) -> SearchResult:
+    #     total_results = len(sorted_results)
+    #     start_idx = (page - 1) * per_page
+    #     end_idx = start_idx + per_page
+    #     paged_frames = sorted_results[start_idx:end_idx]
 
-        return SearchResult(
-            frames=paged_frames,
-            total=total_results,
-            page=page,
-            has_more=end_idx < total_results
-        )
+    #     return SearchResult(
+    #         frames=paged_frames,
+    #         total=total_results,
+    #         page=page,
+    #         has_more=end_idx < total_results
+    #     )
