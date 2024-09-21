@@ -48,7 +48,7 @@ class TextSearcher(AbstractSearcher):
         )
 
     async def search_similar_frames(self, query: str, top_k: int = 5) -> List[dict]:
-        query_vector, _ = await self.vectorizer.vectorize(query)
+        query_vector = await self.vectorizer.vectorize(query)
 
         distances, indices = self.vectorizer.search(query_vector, k=top_k)
 
