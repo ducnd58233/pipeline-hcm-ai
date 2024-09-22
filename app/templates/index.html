@@ -12,8 +12,11 @@
         <h1 id="video-retrieval-system" class="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-center text-gray-800">
             Video Retrieval System
         </h1>
-
+        <h2>Search V1</h2>
         {% include 'components/search_bar.html' %}
+
+        <h2>Search V2</h2>
+        {% include 'components/search_bar_v2.html' %}
 
         <h2 id="selected-frames" class="text-2xl font-bold mb-4">Selected Frames</h2>
         <div id="selected-frames" hx-get="/get_selected_frames" hx-trigger="load, frame-toggled from:body">

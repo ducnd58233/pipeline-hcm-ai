@@ -66,7 +66,7 @@ weight_labels = {
 }
 
 current_results: List[FrameMetadataModel] = []
-
+search_version = "v1"
 
 @router.get("/weight_adjusters", response_class=HTMLResponse)
 async def get_weight_adjusters(request: Request):
@@ -153,10 +153,13 @@ async def search(
     page: int = Query(1, ge=1),
     per_page: int = Query(200, ge=1, le=500)
 ):
-    global current_results
+    global current_results, search_version
     try:
         if page == 1:
             current_results = []
+            search_version = "v1"
+            
+        logger.info("Searching V1")
 
         translated_query = ""
         if text_query:
@@ -206,7 +209,8 @@ async def search(
             "page": page,
             "per_page": per_page,
             "total": results.total if results else 0,
-            "has_more": results.has_more if results else False
+            "has_more": results.has_more if results else False,
+            "version": search_version
         }
         logger.debug(f"Context for template: {context}")
 
@@ -216,6 +220,83 @@ async def search(
         raise HTTPException(
             status_code=500, detail="An error occurred while searching. Please try again later.")
 
+
+@router.post("/search_v2", response_class=HTMLResponse)
+@router.get("/search_v2", response_class=HTMLResponse)
+async def search(
+    request: Request,
+    text_query: str = Query(""),
+    selected_tags: List[str] = Query([]),
+    use_tag_inference: bool = Query(False),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(200, ge=1, le=500)
+):
+    global current_results, search_version
+    try:
+        if page == 1:
+            current_results = []
+            search_version = "v2"
+            
+        logger.info("Searching V2")
+
+        translated_query = ""
+        if text_query:
+            translated_query = await text_processor.translate_to_english(text_query)
+            logger.info(
+                f"Translated query: '{text_query}' to '{translated_query}'")
+
+        object_query = ObjectQuery()
+        object_query.objects = grid_manager.get_state()
+
+        tag_query = TagQuery(query="", entities=selected_tags)
+        if use_tag_inference and translated_query:
+            tag_query.query = translated_query
+
+        queries = QueriesStructure(
+            text_searcher=Searcher(query=TextQuery(
+                query=translated_query), weight=weights['text']/100) if translated_query else None,
+            object_detection_searcher=Searcher(
+                query=object_query, weight=weights['object']/100) if object_query.objects else None,
+            tag_searcher=Searcher(query=tag_query, weight=weights['tag']/100) if (
+                selected_tags or (use_tag_inference and translated_query)) else None,
+        )
+
+        search_request = SearchRequest(
+            queries=queries,
+            page=page,
+            per_page=per_page
+        )
+
+        logger.info(
+            f"Searching with queries: {search_request.queries}, page: {page}")
+        # results = await search_service.search(search_request.queries, use_tag_inference, page=page, per_page=per_page)
+        results = await search_service_v2.search(search_request.queries, use_tag_inference, page=page, per_page=per_page)
+        logger.info(f"Found: {len(results.frames)} results")
+        current_results.extend(results.frames)
+
+        context = {
+            "request": request,
+            "results": results.frames if results else [],
+            "text_query": text_query,
+            "selected_tags": selected_tags,
+            "use_tag_inference": use_tag_inference,
+            "object_query": grid_manager.get_state(),
+            "text_weight": weights['text'] / 100,
+            "object_weight": weights['object'] / 100,
+            "tag_weight": weights['tag'] / 100,
+            "page": page,
+            "per_page": per_page,
+            "total": results.total if results else 0,
+            "has_more": results.has_more if results else False,
+            "version": search_version,
+        }
+        logger.debug(f"Context for template: {context}")
+
+        return templates.TemplateResponse("components/search_results.html", context)
+    except Exception as e:
+        logger.error(f"Error occurred during search: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="An error occurred while searching. Please try again later.")
 
 @router.post("/auto_select_frames", response_class=HTMLResponse)
 async def auto_select_frames(request: Request, max_items: int = Form(100)):
